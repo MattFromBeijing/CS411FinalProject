@@ -7,6 +7,7 @@ from workout.utils.sql_utils import check_database_connection, get_db_connection
 import sqlite3
 import hashlib
 import os
+from workout.models.mongo_session_model import login_user, logout_user
 from werkzeug.exceptions import BadRequest, Unauthorized
 
 # from flask_cors import CORS
@@ -153,7 +154,7 @@ def create_app(config_class=ProductionConfig):
             user_id = Users.get_id_by_username(username)
 
             # Load user's combatants into the battle model
-            login_user(user_id, battle_model)
+            login_user(user_id)
 
             app.logger.info("User %s logged in successfully.", username)
             return jsonify({"message": f"User {username} logged in successfully."}), 200
@@ -192,7 +193,7 @@ def create_app(config_class=ProductionConfig):
             user_id = Users.get_id_by_username(username)
 
             # Save user's combatants and clear the battle model
-            logout_user(user_id, battle_model)
+            logout_user(user_id)
 
             app.logger.info("User %s logged out successfully.", username)
             return jsonify({"message": f"User {username} logged out successfully."}), 200
