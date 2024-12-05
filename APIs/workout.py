@@ -14,7 +14,7 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
     
     Return: List of recommended exercises
     """
-    params = {"language": 2}  # Language: English
+    params = {"language": 2}  # default Language: English
 
     try:
         response = requests.get(f"{BASE_URL}exercise/", params=params)
@@ -25,6 +25,7 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
         recommendations = []
         weight_difference = current_weight - desired_weight
 
+        # current logic for exercise recommendations, might change this
         for exercise in data:
             if weight_difference > 0:  # User wants to lose weight/fat
                 # exercises involving cardio and calorie burning
@@ -45,14 +46,13 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
 
 # Example usage
 if __name__ == "__main__":
-    # Get user input
+    # Get user input - their weight
     current_weight = float(input("Enter your current weight (in pounds): "))
     desired_weight = float(input("Enter your desired weight (in pounds): "))
 
-    # Fetch exercises for the user's current and desired weights
+    # Fetch exercise recommendations for the user's current and desired weights
     exercises = fetch_exercises_by_weights(current_weight, desired_weight)
 
-    # Display results
     print(f"\nYour current weight: {current_weight} lb")
     print(f"Your desired weight: {desired_weight} lb")
     print("\nRecommended Exercises Based on Your Goal:")
