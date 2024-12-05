@@ -3,7 +3,7 @@ from flask import Flask, jsonify, make_response, Response, request
 from workout.db import db
 from config import ProductionConfig
 from workout.models.user_model import Users
-from workout.utils.sql_utils import check_database_connection, get_db_connection, check_table_exists
+#from workout.utils.sql_utils import check_database_connection, get_db_connection, check_table_exists
 import sqlite3
 import hashlib
 import os

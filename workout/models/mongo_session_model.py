@@ -1,7 +1,7 @@
 import logging
 from typing import Any, List
 
-from workout.clients import sessions_collection
+from workout.clients.mongo_client import sessions_collection
 from workout.utils.logger import configure_logger
 
 

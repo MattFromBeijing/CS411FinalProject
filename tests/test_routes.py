@@ -1,100 +1,72 @@
 import pytest
 from flask import Flask
-from app import app  # Import your Flask app instance from app.py
-
+from app import create_app  # Assuming the provided code is saved in `app.py`
+from workout.models.user_model import Users
 
 @pytest.fixture
-def client():
-    """Fixture to provide a test client for the Flask app."""
-    with app.test_client() as client:
-        yield client
-
-
-def test_create_account_success(client):
-    """Test successful account creation."""
-    response = client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
+def app():
+    # Set up the Flask test application
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
     })
+
+    with app.app_context():
+        Users.init_test_data()  # If you have a method to initialize test data
+
+    yield app
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
+
+@pytest.fixture
+def runner(app):
+    return app.test_cli_runner()
+
+# Health check
+def test_healthcheck(client):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json == {"status": "healthy"}
+
+# User creation
+def test_create_user(client):
+    response = client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
     assert response.status_code == 201
-    assert response.json['message'] == 'Account created successfully'
+    assert response.json["status"] == "user added"
+    assert response.json["username"] == "testuser"
 
+# User deletion
+def test_delete_user(client):
+    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
+    response = client.delete("/api/delete-user", json={"username": "testuser"})
+    assert response.status_code == 200
+    assert response.json["status"] == "user deleted"
+    assert response.json["username"] == "testuser"
 
-def test_create_account_duplicate(client):
-    """Test creating an account with a duplicate username."""
-    client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
-    response = client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword2'
-    })
-    assert response.status_code == 400
-    assert response.json['error'] == 'Username already exists'
-
-
+# User login
 def test_login_success(client):
-    """Test successful login."""
-    client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
-    response = client.post('/api/login', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
+    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
+    response = client.post("/api/login", json={"username": "testuser", "password": "testpass"})
     assert response.status_code == 200
-    assert response.json['message'] == 'Login successful'
+    assert "logged in successfully" in response.json["message"]
 
+def test_login_failure(client):
+    response = client.post("/api/login", json={"username": "wronguser", "password": "wrongpass"})
+    assert response.status_code == 401
+    assert "Invalid username or password" in response.json["error"]
 
-def test_login_invalid_password(client):
-    """Test login with an incorrect password."""
-    client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
-    response = client.post('/api/login', json={
-        'username': 'testuser',
-        'password': 'wrongpassword'
-    })
-    assert response.status_code == 400
-    assert response.json['error'] == 'Invalid username or password'
-
-
-def test_update_password_success(client):
-    """Test successful password update."""
-    client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
-    response = client.post('/api/update-password', json={
-        'username': 'testuser',
-        'old_password': 'securepassword',
-        'new_password': 'newsecurepassword'
-    })
+# User logout
+def test_logout_success(client):
+    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
+    client.post("/api/login", json={"username": "testuser", "password": "testpass"})
+    response = client.post("/api/logout", json={"username": "testuser"})
     assert response.status_code == 200
-    assert response.json['message'] == 'Password updated successfully'
+    assert "logged out successfully" in response.json["message"]
 
-    # Test login with the new password
-    login_response = client.post('/api/login', json={
-        'username': 'testuser',
-        'password': 'newsecurepassword'
-    })
-    assert login_response.status_code == 200
-    assert login_response.json['message'] == 'Login successful'
-
-
-def test_update_password_invalid_old_password(client):
-    """Test password update with incorrect old password."""
-    client.post('/api/create-account', json={
-        'username': 'testuser',
-        'password': 'securepassword'
-    })
-    response = client.post('/api/update-password', json={
-        'username': 'testuser',
-        'old_password': 'wrongpassword',
-        'new_password': 'newsecurepassword'
-    })
+def test_logout_failure(client):
+    response = client.post("/api/logout", json={"username": "nonexistentuser"})
     assert response.status_code == 400
-    assert response.json['error'] == 'Old password is incorrect'
+    assert "Invalid request payload" in response.json["error"]
