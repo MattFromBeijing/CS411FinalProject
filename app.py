@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from workout.db import db
-from config import ProductionConfig
+from config import ProductionConfig, TestConfig
 from workout.models.user_model import Users
 #from workout.utils.sql_utils import check_database_connection, get_db_connection, check_table_exists
 import sqlite3
@@ -15,7 +15,7 @@ from werkzeug.exceptions import BadRequest, Unauthorized
 # Load environment variables from .env file
 load_dotenv()
 
-def create_app(config_class=ProductionConfig):
+def create_app(config_class=TestConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
