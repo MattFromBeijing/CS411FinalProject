@@ -20,8 +20,10 @@ def create_app(config_class=TestConfig):
     app.config.from_object(config_class)
 
     db.init_app(app)  # Initialize db with app
-    with app.app_context():
-        db.create_all()  # Recreate all tables
+    #with app.app_context():
+        #db.create_all()  # Recreate all tables
+    #This is temporary, delete this 
+    
 
     ####################################################
     #
@@ -204,3 +206,6 @@ def create_app(config_class=TestConfig):
         except Exception as e:
             app.logger.error("Error during logout for username %s: %s", username, str(e))
             return jsonify({"error": "An unexpected error occurred."}), 500
+ 
+    #THIS NEEdS TO BE AT THE END OR NOTHING HAPPENS
+    return app
