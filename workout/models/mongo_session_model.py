@@ -32,7 +32,7 @@ def login_user(user_id: int) -> None:
         logger.info("No session found for user ID %d.", user_id)
         sessions_collection.insert_one({"user_id": user_id})
         logger.info("New session created for user ID %d.", user_id)
-    """
+"""    
 def logout_user(user_id: int) -> None:
     
     This does absolutely nothing right now because nothing is stored with the users
@@ -57,5 +57,5 @@ def logout_user(user_id: int) -> None:
 
     logger.info("No data successfully saved for user ID %d.", user_id)
     logger.info("Nothing cleared for user ID %d.", user_id)
-
-    """
+"""
+    

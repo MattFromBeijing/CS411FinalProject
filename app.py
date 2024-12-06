@@ -7,7 +7,7 @@ from workout.models.user_model import Users
 import sqlite3
 import hashlib
 import os
-from workout.models.mongo_session_model import login_user, logout_user
+from workout.models.mongo_session_model import login_user
 from werkzeug.exceptions import BadRequest, Unauthorized
 
 # from flask_cors import CORS
