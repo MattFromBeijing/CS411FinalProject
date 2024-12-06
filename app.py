@@ -49,7 +49,7 @@ def create_app(config_class=TestConfig):
     #
     ##########################################################
 
-    @app.route('/api/create-user', methods=['POST'])
+    @app.route('/api/create-account', methods=['POST'])
     def create_user() -> Response:
         """
         Route to create a new user.
