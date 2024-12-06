@@ -10,7 +10,6 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
     ARG: 
         current_weight = integer of users current weight 
         desired_weight = integer of users desired weight
-
     
     Return: List of recommended exercises
     """
@@ -20,6 +19,8 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
         response = requests.get(f"{BASE_URL}exercise/", params=params)
         response.raise_for_status()
         data = response.json().get("results", []) # getting data
+
+        print(data)
 
         # Recommendation logic based on weight difference, lose or gain weight or maintain
         recommendations = []
