@@ -194,9 +194,6 @@ def create_app(config_class=TestConfig):
             # Get user ID
             user_id = Users.get_id_by_username(username)
 
-            # Save user's combatants and clear the battle model
-            logout_user(user_id)
-
             app.logger.info("User %s logged out successfully.", username)
             return jsonify({"message": f"User {username} logged out successfully."}), 200
 
