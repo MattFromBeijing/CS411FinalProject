@@ -1,72 +1,110 @@
 import pytest
-from flask import Flask
-from app import create_app  # Assuming the provided code is saved in `app.py`
+
 from workout.models.user_model import Users
 
-@pytest.fixture
-def app():
-    # Set up the Flask test application
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-    })
-
-    with app.app_context():
-        Users.init_test_data()  # If you have a method to initialize test data
-
-    yield app
 
 @pytest.fixture
-def client(app):
-    return app.test_client()
+def sample_user():
+    return {
+        "username": "testuser",
+        "password": "securepassword123"
+    }
 
-@pytest.fixture
-def runner(app):
-    return app.test_cli_runner()
 
-# Health check
-def test_healthcheck(client):
-    response = client.get("/api/health")
-    assert response.status_code == 200
-    assert response.json == {"status": "healthy"}
+##########################################################
+# User Creation
+##########################################################
 
-# User creation
-def test_create_user(client):
-    response = client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
-    assert response.status_code == 201
-    assert response.json["status"] == "user added"
-    assert response.json["username"] == "testuser"
+def test_create_user(session, sample_user):
+    """Test creating a new user with a unique username."""
+    Users.create_user(**sample_user)
+    user = session.query(Users).filter_by(username=sample_user["username"]).first()
+    assert user is not None, "User should be created in the database."
+    assert user.username == sample_user["username"], "Username should match the input."
+    assert len(user.salt) == 32, "Salt should be 32 characters (hex)."
+    assert len(user.password) == 64, "Password should be a 64-character SHA-256 hash."
 
-# User deletion
-def test_delete_user(client):
-    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
-    response = client.delete("/api/delete-user", json={"username": "testuser"})
-    assert response.status_code == 200
-    assert response.json["status"] == "user deleted"
-    assert response.json["username"] == "testuser"
+def test_create_duplicate_user(session, sample_user):
+    """Test attempting to create a user with a duplicate username."""
+    Users.create_user(**sample_user)
+    with pytest.raises(ValueError, match="User with username 'testuser' already exists"):
+        Users.create_user(**sample_user)
 
-# User login
-def test_login_success(client):
-    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
-    response = client.post("/api/login", json={"username": "testuser", "password": "testpass"})
-    assert response.status_code == 200
-    assert "logged in successfully" in response.json["message"]
+##########################################################
+# User Authentication
+##########################################################
 
-def test_login_failure(client):
-    response = client.post("/api/login", json={"username": "wronguser", "password": "wrongpass"})
-    assert response.status_code == 401
-    assert "Invalid username or password" in response.json["error"]
+def test_check_password_correct(session, sample_user):
+    """Test checking the correct password."""
+    Users.create_user(**sample_user)
+    assert Users.check_password(sample_user["username"], sample_user["password"]) is True, "Password should match."
 
-# User logout
-def test_logout_success(client):
-    client.post("/api/create-user", json={"username": "testuser", "password": "testpass"})
-    client.post("/api/login", json={"username": "testuser", "password": "testpass"})
-    response = client.post("/api/logout", json={"username": "testuser"})
-    assert response.status_code == 200
-    assert "logged out successfully" in response.json["message"]
+def test_check_password_incorrect(session, sample_user):
+    """Test checking an incorrect password."""
+    Users.create_user(**sample_user)
+    assert Users.check_password(sample_user["username"], "wrongpassword") is False, "Password should not match."
 
-def test_logout_failure(client):
-    response = client.post("/api/logout", json={"username": "nonexistentuser"})
-    assert response.status_code == 400
-    assert "Invalid request payload" in response.json["error"]
+def test_check_password_user_not_found(session):
+    """Test checking password for a non-existent user."""
+    with pytest.raises(ValueError, match="User nonexistentuser not found"):
+        Users.check_password("nonexistentuser", "password")
+
+##########################################################
+# Update Password
+##########################################################
+
+def test_update_password(session, sample_user):
+    """Test updating the password for an existing user."""
+    Users.create_user(**sample_user)
+    new_password = "newpassword456"
+    Users.update_password(sample_user["username"], new_password)
+    assert Users.check_password(sample_user["username"], new_password) is True, "Password should be updated successfully."
+
+def test_update_password_user_not_found(session):
+    """Test updating the password for a non-existent user."""
+    with pytest.raises(ValueError, match="User nonexistentuser not found"):
+        Users.update_password("nonexistentuser", "newpassword")
+
+
+##########################################################
+# Delete User
+##########################################################
+
+def test_delete_user(session, sample_user):
+    """Test deleting an existing user."""
+    Users.create_user(**sample_user)
+    Users.delete_user(sample_user["username"])
+    user = session.query(Users).filter_by(username=sample_user["username"]).first()
+    assert user is None, "User should be deleted from the database."
+
+def test_delete_user_not_found(session):
+    """Test deleting a non-existent user."""
+    with pytest.raises(ValueError, match="User nonexistentuser not found"):
+        Users.delete_user("nonexistentuser")
+
+##########################################################
+# Get User
+##########################################################
+
+def test_get_id_by_username(session, sample_user):
+    """
+    Test successfully retrieving a user's ID by their username.
+    """
+    # Create a user in the database
+    Users.create_user(**sample_user)
+
+    # Retrieve the user ID
+    user_id = Users.get_id_by_username(sample_user["username"])
+
+    # Verify the ID is correct
+    user = session.query(Users).filter_by(username=sample_user["username"]).first()
+    assert user is not None, "User should exist in the database."
+    assert user.id == user_id, "Retrieved ID should match the user's ID."
+
+
+def test_get_id_by_username_user_not_found(session):
+    """
+    Test failure when retrieving a non-existent user's ID by their username.
+    """
+    with pytest.raises(ValueError, match="User nonexistentuser not found"):
+        Users.get_id_by_username("nonexistentuser")

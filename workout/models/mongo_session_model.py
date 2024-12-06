@@ -38,7 +38,7 @@ def login_user(user_id: int) -> None:
         sessions_collection.insert_one({"user_id": user_id, "combatants": []})
         logger.info("New session created for user ID %d.", user_id)
 
-def logout_user(user_id: int, battle_model) -> None:
+def logout_user(user_id: int) -> None:
     """
     Store the current combatants from the BattleModel back into MongoDB.
 
