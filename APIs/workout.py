@@ -44,7 +44,62 @@ def fetch_exercises_by_weights(current_weight, desired_weight):
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]
 
-# Example usage
+def fetch_exercise_by_muscle_group(list_of_muscle_group,target_time):
+    """
+    Fetch exercises based on the user's target muscle groups. Recommend exercises based on time constraint and target muscle
+
+    Arg:
+        list_of_muscle_group: list of target muscle from user
+        target_time: integer of user's target workout time
+
+    Return:
+        recommendations: list of recommended exercises
+    """
+    params = {"language": 2}  # default Language: English
+
+    try:
+        response = requests.get(f"{BASE_URL}exercise/", params=params)
+        response.raise_for_status()
+        data = response.json().get("results", []) # getting data
+
+        # Recommendation logic based on time and target muscle
+        recommendations = []
+        minutes_per_muscle = target_time // len(list_of_muscle_group) # dividing the time based on the number of targetted muscles
+        if exercise in data: 
+            for muscle in list_of_muscle_group: 
+                while(minutes_per_muscle>=0): # time constraint
+                    if muscle in exercise["description"].lower():
+                        recommendations.append(exercise["name"])
+                        minutes_per_muscle -= 3 # setting it to 3 mins per exercise for now
+                minutes_per_muscle = target_time // len(list_of_muscle_group) # reset the time
+        return recommendations
+    except requests.RequestException as e:
+        return [f"Error fetching exercises: {str(e)}"]
+
+#def update_all_exercise()
+def update_one_exercise(recommendations,exercise):
+    """
+    Delete an exercise, add a new exercise, and updating the recommendations
+
+    Arg:
+        recommendations: list of the recommended exercises
+        exercise: string of the specific exercise the user want to update
+
+    Return:
+        recommendations: the new updated list of recommended exercises
+    """
+    params = {"language": 2}  # default Language: English
+
+    try:
+        response = requests.get(f"{BASE_URL}exercise/", params=params)
+        response.raise_for_status()
+        data = response.json().get("results", []) # getting data
+
+    except requests.RequestException as e:
+        return [f"Error fetching exercises: {str(e)}"]
+
+
+
 if __name__ == "__main__":
     # Get user input - their weight
     current_weight = float(input("Enter your current weight (in pounds): "))
