@@ -50,7 +50,7 @@ def create_app(config_class=TestConfig):
     ##########################################################
 
     @app.route('/api/create-account', methods=['POST'])
-    def create_user() -> Response:
+    def create_account() -> Response:
         """
         Route to create a new user.
 
@@ -78,7 +78,7 @@ def create_app(config_class=TestConfig):
 
             # Call the User function to add the user to the database
             app.logger.info('Adding user: %s', username)
-            Users.create_user(username, password)
+            Users.create_account(username, password)
 
             app.logger.info("User added: %s", username)
             return make_response(jsonify({'status': 'user added', 'username': username}), 201)
@@ -168,41 +168,22 @@ def create_app(config_class=TestConfig):
             return jsonify({"error": "An unexpected error occurred."}), 500
 
 
-    @app.route('/api/logout', methods=['POST'])
-    def logout():
-        """
-        Route to log out a user and save their combatants to MongoDB.
-
-        Expected JSON Input:
-            - username (str): The username of the user.
-
-        Returns:
-            JSON response indicating the success of the logout.
-
-        Raises:
-            400 error if input validation fails or user is not found in MongoDB.
-            500 error for any unexpected server-side issues.
-        """
+    @app.route('/api/update-password', methods=['POST'])
+    def update_password():
         data = request.get_json()
-        if not data or 'username' not in data:
-            app.logger.error("Invalid request payload for logout.")
-            raise BadRequest("Invalid request payload. 'username' is required.")
-
-        username = data['username']
+        if not data or 'username' not in data or 'new_password' not in data:
+            raise BadRequest("Invalid request payload. 'username' and 'new_password' are required.")
 
         try:
-            # Get user ID
-            user_id = Users.get_id_by_username(username)
-
-            app.logger.info("User %s logged out successfully.", username)
-            return jsonify({"message": f"User {username} logged out successfully."}), 200
-
+            username = data['username']
+            new_password = data['new_password']
+            Users.update_password(username, new_password)
+            return jsonify({"message": "Password updated successfully."}), 200
         except ValueError as e:
-            app.logger.warning("Logout failed for username %s: %s", username, str(e))
             return jsonify({"error": str(e)}), 400
         except Exception as e:
-            app.logger.error("Error during logout for username %s: %s", username, str(e))
             return jsonify({"error": "An unexpected error occurred."}), 500
+
  
     #THIS NEEdS TO BE AT THE END OR NOTHING HAPPENS
     return app
