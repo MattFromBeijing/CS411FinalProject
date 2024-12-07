@@ -26,7 +26,7 @@ def test_db():
     conn.close()
     os.remove(db_path)  # Clean up after the test
 
-
+#ugh
 @pytest.fixture
 def mock_get_db_connection(test_db, monkeypatch):
     """Fixture to mock the `get_db_connection` function."""
