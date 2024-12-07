@@ -54,7 +54,7 @@ def login(username: str, password: str) -> bool:
             if row:
                 salt, hashed_password = row[0], row[1]
                 # Check the password
-                if hashed_password == hash_password(password, salt.encode('utf-8')):
+                if hashed_password == hash_password(password, bytes.fromhex(salt)):
                     logger.info("Logged into user with username %s", username)
                     return True
                 else:
