@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from config import ProductionConfig, TestConfig
-from workout.models.user_model import Users
+from workout.models.user_model import create_user, login, update_password, clear_users, get_db_connection
 from werkzeug.exceptions import BadRequest, Unauthorized
 
 # Load environment variables from .env file
