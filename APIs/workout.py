@@ -1,7 +1,11 @@
 import requests
+import os
+from dataclasses import dataclass
+from datetime import date
+from workout.models.exercise_model import Exercise
 
 # Base URL for the wger API
-BASE_URL = "https://wger.de/api/v2/"
+BASE_URL = "https://wger.de/api/v2/exercisebaseinfo/"
 
 API_KEY = "5bf4f0a02bedae58dbbbbf318be604eb4d0f88c5"
 
@@ -46,13 +50,12 @@ API_KEY = "5bf4f0a02bedae58dbbbbf318be604eb4d0f88c5"
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]'''
 
-def fetch_exercise_by_muscle_group(list_of_muscle_group,target_time):
+def fetch_exercise_by_muscle_group(list_of_muscle_group):
     """
     Fetch exercises based on the user's target muscle groups. Recommend exercises based on time constraint and target muscle
 
     Arg:
         list_of_muscle_group: list of target muscle from user
-        target_time: integer of user's target workout time
 
     Return:
         recommendations: list of recommended exercises
@@ -63,21 +66,30 @@ def fetch_exercise_by_muscle_group(list_of_muscle_group,target_time):
     }
 
     try:
-        response = requests.get(f"{BASE_URL}exercise/", params=params)
+        #response = requests.get(f"{BASE_URL}exercise/", params=params)
+        response = requests.get(BASE_URL, params=params, headers={"Authorization": f"Token {API_KEY}"})
         response.raise_for_status()
         data = response.json().get("results", []) # getting data
 
         # Recommendation logic based on time and target muscle
         recommendations = []
-        minutes_per_muscle = target_time // len(list_of_muscle_group) # dividing the time based on the number of targetted muscles
-        for exercise in data: 
-            for muscle in list_of_muscle_group: 
-                while(minutes_per_muscle>=0): # time constraint
-                    if muscle in exercise["description"].lower():
-                        recommendations.append(exercise["name"])
-                        minutes_per_muscle -= 3 # setting it to 3 mins per exercise for now
-                minutes_per_muscle = target_time // len(list_of_muscle_group) # reset the time
-            break
+
+        for item in data:  
+            if "exercises" in item:  
+                for exercise in item["exercises"]:  
+                    if exercise.get("language") == 2: 
+                        name = exercise.get("name", "No name available")
+                        muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                        equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+
+                        recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment)) # storing data
+
+                        # printing statements
+                        '''print(f"Exercise Name: {name}")
+                        print(f"Muscle Group Targeted: {muscles}")
+                        print(f"Equipment: {equipment}")
+                        print("-" * 40)'''
+
         return recommendations
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]
@@ -119,14 +131,15 @@ def update_one_exercise(recommendations,exercise,muscle):
 if __name__ == "__main__":
     try:
         print("\nPlease specify the muscle groups you'd like to target during your workout.")
-        print("Examples: legs, arms, chest, back, abs, cardio")
+        print("Please Choose one of the following: legs, biceps, back, abs, cardio")
         target_muscle_groups = input("Enter your preferred muscle groups, separated by commas: ").strip().lower()
+        #for muscle in target_muscle_groups:
+         #   if (muscle != "")
+
         muscle_groups_list = [muscle.strip() for muscle in target_muscle_groups.split(",")]
 
-        target_time = int(input("\nEnter your target workout duration (in minutes): "))
-
         print("\nFetching exercise recommendations...")
-        exercises = fetch_exercise_by_muscle_group(muscle_groups_list, target_time)
+        exercises = fetch_exercise_by_muscle_group(muscle_groups_list)
 
         print(f"\nRecommended Exercises Targeting: {', '.join(muscle_groups_list)}")
         for exercise in exercises:
