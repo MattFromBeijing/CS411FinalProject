@@ -33,7 +33,7 @@ def hash_password(password: str, salt: bytes) -> str:
 
 def login(username: str, password: str) -> bool:
     """
-    Log into a user stored in the users table.
+    Log into a user stored in the login table.
 
     Args:
         username (str): The user's username.
@@ -48,7 +48,7 @@ def login(username: str, password: str) -> bool:
             cursor = conn.cursor()
             logger.info("Attempting to login user with username %s", username)
 
-            cursor.execute("SELECT salt, hashed_password FROM Users WHERE username = ?", (username,))
+            cursor.execute("SELECT salt, hashed_password FROM login WHERE username = ?", (username,))
             row = cursor.fetchone()
 
             if row:
@@ -70,7 +70,7 @@ def login(username: str, password: str) -> bool:
 
 def create_user(username: str, password: str) -> None:
     """
-    Creates a new user in the users table.
+    Creates a new user in the login table.
 
     Args:
         username (str): The user's username.
@@ -87,7 +87,7 @@ def create_user(username: str, password: str) -> None:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO Users (username, salt, hashed_password)
+                INSERT INTO login (username, salt, hashed_password)
                 VALUES (?, ?, ?)
             """, (username, salt.hex(), hashed_password))
             conn.commit()
@@ -118,12 +118,12 @@ def update_password(username: str, password: str) -> None:
             cursor = conn.cursor()
             logger.info("Attempting to update password for user with username %s", username)
 
-            cursor.execute("SELECT salt FROM Users WHERE username = ?", (username,))
+            cursor.execute("SELECT salt FROM login WHERE username = ?", (username,))
             row = cursor.fetchone()
             if row:
                 salt = row[0]
                 hashed_password = hash_password(password, salt.encode('utf-8'))
-                cursor.execute("UPDATE Users SET hashed_password = ? WHERE username = ?", (hashed_password, username))
+                cursor.execute("UPDATE login SET hashed_password = ? WHERE username = ?", (hashed_password, username))
                 conn.commit()
 
                 logger.info("Password updated for user with username: %s", username)
@@ -137,20 +137,26 @@ def update_password(username: str, password: str) -> None:
 
 def clear_users() -> None:
     """
-    Recreates the Users table, effectively deleting all users.
+    Recreates the login table, effectively deleting all users.
 
     Raises:
         sqlite3.Error: If any database error occurs.
     """
     try:
-        with open(os.getenv("SQL_CREATE_TABLE_PATH", "/app/sql/create_tables.sql"), "r") as fh:
-            create_table_script = fh.read()
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.executescript(create_table_script)
+            cursor.executescript("""
+                DROP TABLE IF EXISTS login;
+                CREATE TABLE login (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    salt TEXT NOT NULL,
+                    hashed_password TEXT NOT NULL
+                );
+            """)
             conn.commit()
 
             logger.info("Users cleared successfully.")
     except sqlite3.Error as e:
-        logger.error("Database error while clearing catalog: %s", str(e))
+        logger.error("Database error while clearing login table: %s", str(e))
         raise e
