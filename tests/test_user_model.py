@@ -1,7 +1,8 @@
 import pytest
 import sqlite3
 import os
-from workout.models.user_model import create_user, login, update_password, clear_users, get_db_connection
+import hashlib
+from workout.models.user_model import create_user, hash_password, login, update_password, clear_users, get_db_connection
 
 # SQLite schema for testing
 CREATE_LOGIN_TABLE = """
@@ -41,6 +42,21 @@ def sample_user():
         "username": "testuser",
         "password": "securepassword123"
     }
+
+##########################################################
+# Hash Password
+##########################################################
+
+def test_hash_password():
+    """
+    Test the hash_password function with a sample password and salt.
+    """
+    password = "mypassword"
+    salt = b"randomsalt"
+    expected_hash = hashlib.sha256(password.encode('utf-8') + salt).hexdigest()
+
+    # Assert the function output matches the expected hash
+    assert hash_password(password, salt) == expected_hash, "The hash does not match the expected value."
 
 ##########################################################
 # User Creation
