@@ -13,7 +13,6 @@ configure_logger(logger)
 # load the db path from the environment with a default value
 DB_PATH = os.getenv("DB_PATH", "/app/sql/workout.db")
 
-
 def check_database_connection():
     try:
         conn = sqlite3.connect(DB_PATH)
