@@ -21,9 +21,7 @@ class Log:
 
 def create_log(id: int, user_id: int, exercise_name: str, muscle_groups: str, date: str) -> bool:
     if len(exercise_name) < 0:
-        raise ValueError(f"Invalid exercise name provided: {exercise_name} (must be an string with length greater than 0).")
-    if len(date) < 0:
-        raise ValueError(f"Invalid exercise name provided: {date} (must be an string with length greater than 0).")
+        raise ValueError(f"Invalid exercise name provided: [empty str] (must be an string with length greater than 0).")
 
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -34,8 +32,8 @@ def create_log(id: int, user_id: int, exercise_name: str, muscle_groups: str, da
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO logs (user_id, username, title, exercise_name, muscle_groups, date) VALUES (?, ?, ?, ?, ?, ?)", 
-                (user_id, username, title, exercise_name, muscle_groups, date)
+                "INSERT INTO logs (user_id, exercise_name, muscle_groups, date) VALUES (?, ?, ?, ?)", 
+                (user_id, exercise_name, muscle_groups, date)
             )
             conn.commit()
         return True
