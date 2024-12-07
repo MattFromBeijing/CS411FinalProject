@@ -4,8 +4,8 @@ import os
 from workout.models.user_model import create_user, login, update_password, clear_users, get_db_connection
 
 # SQLite schema for testing
-CREATE_USERS_TABLE = """
-CREATE TABLE IF NOT EXISTS Users (
+CREATE_LOGIN_TABLE = """
+CREATE TABLE IF NOT EXISTS login (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     salt TEXT NOT NULL,
@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS Users (
 @pytest.fixture
 def test_db():
     """Fixture to set up a temporary database for testing."""
-    db_path = "test_users.db"
+    db_path = "test_login.db"
     conn = sqlite3.connect(db_path)
-    conn.executescript(CREATE_USERS_TABLE)
+    conn.executescript(CREATE_LOGIN_TABLE)
     conn.commit()
 
     yield db_path  # Provide the database path to the tests
@@ -26,7 +26,6 @@ def test_db():
     conn.close()
     os.remove(db_path)  # Clean up after the test
 
-#ugh
 @pytest.fixture
 def mock_get_db_connection(test_db, monkeypatch):
     """Fixture to mock the `get_db_connection` function."""
@@ -35,7 +34,6 @@ def mock_get_db_connection(test_db, monkeypatch):
 
     monkeypatch.setattr("workout.models.user_model.get_db_connection", mock_connection)
 
-
 @pytest.fixture
 def sample_user():
     """Provide a sample user for testing."""
@@ -43,7 +41,6 @@ def sample_user():
         "username": "testuser",
         "password": "securepassword123"
     }
-
 
 ##########################################################
 # User Creation
@@ -55,7 +52,7 @@ def test_create_account(mock_get_db_connection, sample_user):
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT username, salt, hashed_password FROM Users WHERE username = ?", (sample_user["username"],))
+        cursor.execute("SELECT username, salt, hashed_password FROM login WHERE username = ?", (sample_user["username"],))
         user = cursor.fetchone()
 
     assert user is not None, "User should be created in the database."
@@ -63,13 +60,11 @@ def test_create_account(mock_get_db_connection, sample_user):
     assert len(user[1]) == 32, "Salt should be 32 characters (hex)."
     assert len(user[2]) == 64, "Password should be a 64-character SHA-256 hash."
 
-
 def test_create_duplicate_user(mock_get_db_connection, sample_user):
     """Test attempting to create a user with a duplicate username."""
     create_user(sample_user["username"], sample_user["password"])
     with pytest.raises(ValueError, match="User with username 'testuser' already exists"):
         create_user(sample_user["username"], sample_user["password"])
-
 
 ##########################################################
 # User Authentication
@@ -80,18 +75,15 @@ def test_check_password_correct(mock_get_db_connection, sample_user):
     create_user(sample_user["username"], sample_user["password"])
     assert login(sample_user["username"], sample_user["password"]) is True, "Password should match."
 
-
 def test_check_password_incorrect(mock_get_db_connection, sample_user):
     """Test checking an incorrect password."""
     create_user(sample_user["username"], sample_user["password"])
     assert login(sample_user["username"], "wrongpassword") is False, "Password should not match."
 
-
 def test_check_password_user_not_found(mock_get_db_connection):
     """Test checking password for a non-existent user."""
     with pytest.raises(ValueError, match="User with username nonexistentuser not found"):
         login("nonexistentuser", "password")
-
 
 ##########################################################
 # Update Password
@@ -104,38 +96,29 @@ def test_update_password(mock_get_db_connection, sample_user):
     update_password(sample_user["username"], new_password)
     assert login(sample_user["username"], new_password) is True, "Password should be updated successfully."
 
-
 def test_update_password_user_not_found(mock_get_db_connection):
     """Test updating the password for a non-existent user."""
     with pytest.raises(ValueError, match="User with username nonexistentuser not found"):
         update_password("nonexistentuser", "newpassword")
 
-
 ##########################################################
-# Delete User
+# Clear Users
 ##########################################################
 
-def test_delete_user(mock_get_db_connection, sample_user):
-    """Test deleting an existing user."""
+def test_clear_users(mock_get_db_connection, sample_user):
+    """Test clearing all users."""
     create_user(sample_user["username"], sample_user["password"])
     clear_users()
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Users WHERE username = ?", (sample_user["username"],))
+        cursor.execute("SELECT * FROM login WHERE username = ?", (sample_user["username"],))
         user = cursor.fetchone()
 
     assert user is None, "User should be deleted from the database."
 
-
-def test_delete_user_not_found(mock_get_db_connection):
-    """Test deleting a non-existent user."""
-    with pytest.raises(ValueError, match="User with username nonexistentuser not found"):
-        clear_users()
-
-
 ##########################################################
-# Get User
+# Get User ID by Username
 ##########################################################
 
 def test_get_id_by_username(mock_get_db_connection, sample_user):
@@ -148,13 +131,12 @@ def test_get_id_by_username(mock_get_db_connection, sample_user):
     # Retrieve the user ID
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM Users WHERE username = ?", (sample_user["username"],))
+        cursor.execute("SELECT id FROM login WHERE username = ?", (sample_user["username"],))
         user = cursor.fetchone()
 
     assert user is not None, "User should exist in the database."
     user_id = user[0]
     assert user_id > 0, "Retrieved ID should be a valid positive integer."
-
 
 def test_get_id_by_username_user_not_found(mock_get_db_connection):
     """
@@ -163,5 +145,5 @@ def test_get_id_by_username_user_not_found(mock_get_db_connection):
     with pytest.raises(ValueError, match="User with username nonexistentuser not found"):
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM Users WHERE username = ?", ("nonexistentuser",))
+            cursor.execute("SELECT id FROM login WHERE username = ?", ("nonexistentuser",))
             assert cursor.fetchone() is None
