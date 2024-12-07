@@ -1,16 +1,8 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
-from workout.db import db
 from config import ProductionConfig, TestConfig
 from workout.models.user_model import Users
-#from workout.utils.sql_utils import check_database_connection, get_db_connection, check_table_exists
-import sqlite3
-import hashlib
-import os
-from workout.models.mongo_session_model import login_user
 from werkzeug.exceptions import BadRequest, Unauthorized
-
-# from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,12 +10,6 @@ load_dotenv()
 def create_app(config_class=TestConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
-
-    db.init_app(app)  # Initialize db with app
-    #with app.app_context():
-        #db.create_all()  # Recreate all tables
-    #This is temporary, delete this 
-    
 
     ####################################################
     #
@@ -42,10 +28,9 @@ def create_app(config_class=TestConfig):
         app.logger.info('Health check')
         return make_response(jsonify({'status': 'healthy'}), 200)
 
-
     ##########################################################
     #
-    # User management
+    # User Management
     #
     ##########################################################
 
@@ -60,31 +45,24 @@ def create_app(config_class=TestConfig):
 
         Returns:
             JSON response indicating the success of user creation.
-        Raises:
-            400 error if input validation fails.
-            500 error if there is an issue adding the user to the database.
         """
         app.logger.info('Creating new user')
         try:
-            # Get the JSON data from the request
             data = request.get_json()
-
-            # Extract and validate required fields
             username = data.get('username')
             password = data.get('password')
 
             if not username or not password:
-                return make_response(jsonify({'error': 'Invalid input, both username and password are required'}), 400)
+                raise BadRequest("Both 'username' and 'password' are required.")
 
-            # Call the User function to add the user to the database
-            app.logger.info('Adding user: %s', username)
-            Users.create_account(username, password)
-
+            Users.create_user(username, password)
             app.logger.info("User added: %s", username)
             return make_response(jsonify({'status': 'user added', 'username': username}), 201)
+        except ValueError as e:
+            return make_response(jsonify({'error': str(e)}), 400)
         except Exception as e:
             app.logger.error("Failed to add user: %s", str(e))
-            return make_response(jsonify({'error': str(e)}), 500)
+            return make_response(jsonify({'error': "An unexpected error occurred."}), 500)
 
     @app.route('/api/delete-user', methods=['DELETE'])
     def delete_user() -> Response:
@@ -96,35 +74,28 @@ def create_app(config_class=TestConfig):
 
         Returns:
             JSON response indicating the success of user deletion.
-        Raises:
-            400 error if input validation fails.
-            500 error if there is an issue deleting the user from the database.
         """
         app.logger.info('Deleting user')
         try:
-            # Get the JSON data from the request
             data = request.get_json()
-
-            # Extract and validate required fields
             username = data.get('username')
 
             if not username:
-                return make_response(jsonify({'error': 'Invalid input, username is required'}), 400)
+                raise BadRequest("The 'username' field is required.")
 
-            # Call the User function to delete the user from the database
-            app.logger.info('Deleting user: %s', username)
             Users.delete_user(username)
-
             app.logger.info("User deleted: %s", username)
             return make_response(jsonify({'status': 'user deleted', 'username': username}), 200)
+        except ValueError as e:
+            return make_response(jsonify({'error': str(e)}), 400)
         except Exception as e:
             app.logger.error("Failed to delete user: %s", str(e))
-            return make_response(jsonify({'error': str(e)}), 500)
+            return make_response(jsonify({'error': "An unexpected error occurred."}), 500)
 
     @app.route('/api/login', methods=['POST'])
     def login():
         """
-        Route to log in a user and load their combatants.
+        Route to log in a user.
 
         Expected JSON Input:
             - username (str): The username of the user.
@@ -132,51 +103,47 @@ def create_app(config_class=TestConfig):
 
         Returns:
             JSON response indicating the success of the login.
-
-        Raises:
-            400 error if input validation fails.
-            401 error if authentication fails (invalid username or password).
-            500 error for any unexpected server-side issues.
         """
-        data = request.get_json()
-        if not data or 'username' not in data or 'password' not in data:
-            app.logger.error("Invalid request payload for login.")
-            raise BadRequest("Invalid request payload. 'username' and 'password' are required.")
-
-        username = data['username']
-        password = data['password']
-
         try:
-            # Validate user credentials
-            if not Users.check_password(username, password):
-                app.logger.warning("Login failed for username: %s", username)
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+
+            if not username or not password:
+                raise BadRequest("Both 'username' and 'password' are required.")
+
+            if not Users.login(username, password):
                 raise Unauthorized("Invalid username or password.")
 
-            # Get user ID
             user_id = Users.get_id_by_username(username)
-
-            # Load user's combatants into the battle model
-            login_user(user_id)
-
             app.logger.info("User %s logged in successfully.", username)
-            return jsonify({"message": f"User {username} logged in successfully."}), 200
-
+            return jsonify({"message": f"User {username} logged in successfully.", "user_id": user_id}), 200
         except Unauthorized as e:
             return jsonify({"error": str(e)}), 401
         except Exception as e:
             app.logger.error("Error during login for username %s: %s", username, str(e))
             return jsonify({"error": "An unexpected error occurred."}), 500
 
-
     @app.route('/api/update-password', methods=['POST'])
     def update_password():
-        data = request.get_json()
-        if not data or 'username' not in data or 'new_password' not in data:
-            raise BadRequest("Invalid request payload. 'username' and 'new_password' are required.")
+        """
+        Route to update a user's password.
 
+        Expected JSON Input:
+            - username (str): The username of the user.
+            - new_password (str): The new password for the user.
+
+        Returns:
+            JSON response indicating the success of the password update.
+        """
         try:
-            username = data['username']
-            new_password = data['new_password']
+            data = request.get_json()
+            username = data.get('username')
+            new_password = data.get('new_password')
+
+            if not username or not new_password:
+                raise BadRequest("Both 'username' and 'new_password' are required.")
+
             Users.update_password(username, new_password)
             return jsonify({"message": "Password updated successfully."}), 200
         except ValueError as e:
@@ -184,6 +151,5 @@ def create_app(config_class=TestConfig):
         except Exception as e:
             return jsonify({"error": "An unexpected error occurred."}), 500
 
- 
-    #THIS NEEdS TO BE AT THE END OR NOTHING HAPPENS
+    # Ensure this is at the end
     return app
