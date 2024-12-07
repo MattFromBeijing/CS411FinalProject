@@ -122,7 +122,7 @@ def update_password(username: str, password: str) -> None:
             row = cursor.fetchone()
             if row:
                 salt = row[0]
-                hashed_password = hash_password(password, salt.encode('utf-8'))
+                hashed_password = hash_password(password, bytes.fromhex(salt))
                 cursor.execute("UPDATE login SET hashed_password = ? WHERE username = ?", (hashed_password, username))
                 conn.commit()
 
@@ -159,4 +159,33 @@ def clear_users() -> None:
             logger.info("Users cleared successfully.")
     except sqlite3.Error as e:
         logger.error("Database error while clearing login table: %s", str(e))
+        raise e
+
+def get_id_by_username(username: str) -> int:
+    """
+    Retrieves the ID of a user by their username.
+
+    Args:
+        username (str): The username of the user.
+
+    Returns:
+        int: The ID of the user.
+
+    Raises:
+        ValueError: If the user is not found.
+        sqlite3.Error: If there is a database error.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            logger.info("Retrieving user ID for username %s", username)
+
+            cursor.execute("SELECT id FROM login WHERE username = ?", (username,))
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                raise ValueError(f"User with username {username} not found")
+    except sqlite3.Error as e:
+        logger.error("Database error while retrieving user ID for username %s: %s", username, str(e))
         raise e
