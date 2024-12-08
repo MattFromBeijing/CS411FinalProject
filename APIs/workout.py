@@ -127,7 +127,48 @@ def fetch_exercise_by_muscle_group(list_of_muscle_group):
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]
 
-#def () # fetch by equipments
+def fetch_exercises_by_equipments(equipmentslist): 
+    '''
+    Fetch exercises based on the user's preferred equipements
+
+    Arg:
+        equipments: list of equipments
+
+    Return:
+        recommendations: list of recommended exercises
+    '''
+    params = {
+        "language": 2,  # default Language: English
+        "api_key": API_KEY  
+    }
+
+    try:
+        #response = requests.get(f"{BASE_URL}exercise/", params=params)
+        response = requests.get(BASE_URL, params=params, headers={"Authorization": f"Token {API_KEY}"})
+        response.raise_for_status()
+        data = response.json().get("results", []) # getting data
+
+        # Recommendation logic based on time and target muscle
+        recommendations = []
+        
+        for target in equipmentslist:
+            for item in data:  
+                if "exercises" in item:  
+                    for exercise in item["exercises"]:  
+                        if exercise.get("language") == 2: 
+                            name = exercise.get("name", "No name available")
+                            muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                            equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                            today_date = date.today().strftime("%Y-%m-%d")
+                            if(equipment.lower()==target):
+                                recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+                            if(target=='None') and (equipment=="No equipment required"):
+                                recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+        return recommendations
+    except requests.RequestException as e:
+        return [f"Error fetching exercises: {str(e)}"]
+
+
 def update_one_exercise(recommendations,exercise,muscle):
     """
     Delete an exercise, add a new exercise, and updating the recommendations
@@ -163,22 +204,44 @@ def update_one_exercise(recommendations,exercise,muscle):
 
 if __name__ == "__main__":
     try:
-        print("\nPlease specify the muscle groups you'd like to target during your workout.")
-        print("\nPlease choose only from the following: leg, arm, back, abs, cardio")
-        while True:
-            valid_muscles = {"leg", "arm", "back", "abs", "cardio"}
-            target_muscle_groups = input("Enter your preferred muscle groups, separated by commas: ").strip().lower()
-            muscle_groups_list = {muscle.strip() for muscle in target_muscle_groups.split(",")}
+        choice = input("Recommend exercises based on muscle or equipments: ").lower()
+        while(choice!="muscle") and (choice!="equipments"):
+            print("please choose between muscle or equipments")
+            choice = input("Recommend exercises based on muscle or equipment")
+        if(choice == "muscle"):
+            print("\nPlease specify the muscle groups you'd like to target during your workout.")
+            print("\nPlease choose only from the following: leg, arm, back, abs, cardio")
+            while True:
+                valid_muscles = {"leg", "arm", "back", "abs", "cardio"}
+                target_muscle_groups = input("Enter your preferred muscle groups, separated by commas: ").strip().lower()
+                muscle_groups_list = {muscle.strip() for muscle in target_muscle_groups.split(",")}
 
-            if muscle_groups_list.issubset(valid_muscles) and muscle_groups_list:
-                break  
-            else:
-                print("\nInvalid selection. Please choose only from the following: leg, arm, back, abs, cardio")
+                if muscle_groups_list.issubset(valid_muscles) and muscle_groups_list:
+                    break  
+                else:
+                    print("\nInvalid selection. Please choose only from the following: leg, arm, back, abs, cardio")
 
-        print("\nFetching exercise recommendations...")
-        exercises = fetch_exercise_by_muscle_group(muscle_groups_list)
+            print("\nFetching exercise recommendations...")
+            exercises = fetch_exercise_by_muscle_group(muscle_groups_list)
+            print(f"\nRecommended Exercises Targeting: {', '.join(muscle_groups_list)}")
+        
+        if(choice == "equipments"):
+            print("\nPlease specify the equipment(s) you'd like to use during your workout.")
+            print("\nPlease choose only from the following: dumbbell, mat, bench, kettlebell, none")
+            while True:
+                valid_equipment = {"dumbbell", "mat", "bench", "kettlebell", "none"}
+                equipments = input("Enter your preferred equipments, separated by commas: ").strip().lower()
+                equipments_list = {equipment.strip() for equipment in equipments.split(",")}
 
-        print(f"\nRecommended Exercises Targeting: {', '.join(muscle_groups_list)}")
+                if equipments_list.issubset(valid_equipment) and equipments_list:
+                    break  
+                else:
+                    print("\nInvalid selection. Please choose only from the following: dumbbell, mat, bench, kettlebell, none")
+
+            print("\nFetching exercise recommendations...")
+            exercises = fetch_exercises_by_equipments(equipments_list)
+            print(f"\nRecommended Exercises Using: {', '.join(equipments_list)}")
+
         for exercise in exercises:
             print(f"- {exercise}")
 
