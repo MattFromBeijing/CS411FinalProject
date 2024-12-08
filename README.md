@@ -1,6 +1,6 @@
 # CS411FinalProject
 
-Routes
+Routes:
 1. Health Check
 Route: /api/health
 Request Type: GET
@@ -19,7 +19,6 @@ Example Request:
 curl -X GET http://localhost:5000/api/health
 
 Example Response:
-
 {
   "status": "healthy"
 }
@@ -78,7 +77,6 @@ curl -s -X POST "http://localhost:5000/api/login" -H "Content-Type: application/
 -d '{"username":"testuser", "password":"password123"}'
 
 Example Response:
-
 {
   "message": "User newuser123 logged in successfully.",
   "user_id": 1
@@ -107,7 +105,6 @@ curl -s -X POST "http://localhost:5000/api/update-password" -H "Content-Type: ap
 -d '{"username":"testuser", "new_password":"newpassword123"}'
 
 Example Response:
-
 {
   "message": "Password updated successfully."
 }
