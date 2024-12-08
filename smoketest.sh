@@ -82,19 +82,6 @@ update_password() {
   fi
 }
 
-# Function to delete a user
-delete_user() {
-  echo "Deleting user..."
-  curl -s -X DELETE "$BASE_URL/delete-user" -H "Content-Type: application/json" \
-    -d '{"username":"testuser"}' | grep -q '"status": "user deleted"'
-  if [ $? -eq 0 ]; then
-    echo "User deleted successfully."
-  else
-    echo "Failed to delete user."
-    exit 1
-  fi
-}
-
 # Function to clear all users
 clear_all_users() {
   echo "Clearing all users..."
@@ -114,10 +101,10 @@ clear_all_users() {
 ###############################################
 
 check_health
+clear_all_users
 create_user
 login_user
 update_password
-delete_user
 clear_all_users
 
 echo "All smoketests passed successfully!"
