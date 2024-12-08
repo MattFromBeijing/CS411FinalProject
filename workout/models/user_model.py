@@ -134,7 +134,6 @@ def update_password(username: str, password: str) -> None:
         logger.error("Database error while updating password for user with username %s: %s", username, str(e))
         raise e
 
-
 def clear_users() -> None:
     """
     Recreates the login table, effectively deleting all users.

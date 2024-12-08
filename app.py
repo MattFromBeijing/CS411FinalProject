@@ -124,34 +124,6 @@ def update_user_password():
         app.logger.error("Error updating password for username %s: %s", username, str(e))
         return jsonify({"error": "An unexpected error occurred."}), 500
 
-@app.route('/api/delete-user', methods=['DELETE'])
-def delete_user() -> Response:
-    """
-    Route to delete a user.
-
-    Expected JSON Input:
-        - username (str): The username of the user to be deleted.
-
-    Returns:
-        JSON response indicating the success of user deletion.
-    """
-    app.logger.info('Deleting user')
-    try:
-        data = request.get_json()
-        username = data.get('username')
-
-        if not username:
-            raise BadRequest("The 'username' field is required.")
-
-        delete_user(username)
-        app.logger.info("User deleted: %s", username)
-        return make_response(jsonify({'status': 'user deleted', 'username': username}), 200)
-    except ValueError as e:
-        return make_response(jsonify({'error': str(e)}), 400)
-    except Exception as e:
-        app.logger.error("Failed to delete user: %s", str(e))
-        return make_response(jsonify({'error': "An unexpected error occurred."}), 500)
-
 @app.route('/api/clear-users', methods=['POST'])
 def clear_users_route():
     """

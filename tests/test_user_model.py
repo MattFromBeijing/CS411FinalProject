@@ -2,7 +2,7 @@ import pytest
 import sqlite3
 import os
 import hashlib
-from workout.models.user_model import create_user, hash_password, login, update_password, clear_users, get_db_connection
+from workout.models.user_model import create_user, hash_password, login, update_password, clear_users, get_db_connection, get_id_by_username
 
 # SQLite schema for testing
 CREATE_LOGIN_TABLE = """
@@ -43,6 +43,14 @@ def sample_user():
         "password": "securepassword123"
     }
 
+@pytest.fixture
+def sample_user2():
+    """Provide a sample user for testing."""
+    return {
+        "username": "test2user",
+        "password": "securerpassword"
+    }
+
 ##########################################################
 # Hash Password
 ##########################################################
@@ -75,6 +83,22 @@ def test_create_account(mock_get_db_connection, sample_user):
 
     assert user is not None, "User should be created in the database."
     assert user[0] == sample_user["username"], "Username should match the input."
+    assert len(user[1]) == 32, "Salt should be 32 characters (hex)."
+    assert len(user[2]) == 64, "Password should be a 64-character SHA-256 hash."
+
+def test_create_account2(mock_get_db_connection, sample_user2):
+    """Test creating a new user with a unique username."""
+    from workout.models.user_model import get_db_connection
+    #This is weird as fuck but I need this for some stupid reason
+    create_user(sample_user2["username"], sample_user2["password"])
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT username, salt, hashed_password FROM login WHERE username = ?", (sample_user2["username"],))
+        user = cursor.fetchone()
+
+    assert user is not None, "User should be created in the database."
+    assert user[0] == sample_user2["username"], "Username should match the input."
     assert len(user[1]) == 32, "Salt should be 32 characters (hex)."
     assert len(user[2]) == 64, "Password should be a 64-character SHA-256 hash."
 
@@ -124,16 +148,26 @@ def test_update_password_user_not_found(mock_get_db_connection):
 ##########################################################
 
 def test_clear_users(mock_get_db_connection, sample_user):
-    """Test clearing all users."""
-    create_user(sample_user["username"], sample_user["password"])
-    clear_users()
+    from workout.models.user_model import get_db_connection
 
+    # Create user
+    create_user(sample_user["username"], sample_user["password"])
+
+    # Verify user exists
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM login WHERE username = ?", (sample_user["username"],))
-        user = cursor.fetchone()
+        cursor.execute("SELECT username FROM login WHERE username = ?", (sample_user["username"],))
+        assert cursor.fetchone() is not None, "User should exist before clearing."
 
-    assert user is None, "User should be deleted from the database."
+    # Clear users
+    clear_users()
+
+    # Verify user is deleted
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM login WHERE username = ?", (sample_user["username"],))
+        assert cursor.fetchone() is None, "User should be deleted from the database."
+
 
 ##########################################################
 # Get User ID by Username
@@ -143,8 +177,6 @@ def test_get_id_by_username(mock_get_db_connection, sample_user):
     """
     Test successfully retrieving a user's ID by their username.
     """
-    from workout.models.user_model import get_id_by_username
-
     # Create a user in the database
     create_user(sample_user["username"], sample_user["password"])
 
@@ -159,8 +191,6 @@ def test_get_id_by_username_user_not_found(mock_get_db_connection):
     """
     Test failure when retrieving a non-existent user's ID by their username.
     """
-    from workout.models.user_model import get_id_by_username
-
     with pytest.raises(ValueError, match="User with username nonexistentuser not found"):
         get_id_by_username("nonexistentuser")
 
