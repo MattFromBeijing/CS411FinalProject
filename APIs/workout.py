@@ -162,20 +162,20 @@ def fetch_exercises_by_equipments(equipmentslist):
                             today_date = date.today().strftime("%Y-%m-%d")
                             if(equipment.lower()==target):
                                 recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
-                            if(target=='None') and (equipment=="No equipment required"):
+                            if(target=='none') and (equipment=="No equipment required"):
                                 recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
         return recommendations
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]
 
 
-def update_one_exercise(recommendations,exercise,muscle):
+def update_one_exercise(recommendations,index,muscle):
     """
     Delete an exercise, add a new exercise, and updating the recommendations
 
     Arg:
         recommendations: list of the recommended exercises
-        exercise: string of the specific exercise the user want to update
+        index: index of the exercise that the user wants to update
         muscle: string of which muscle group the user wants to target
 
     Return:
@@ -187,16 +187,28 @@ def update_one_exercise(recommendations,exercise,muscle):
     }
 
     try:
-        response = requests.get(f"{BASE_URL}exercise/", params=params)
-        response.raise_for_status()
-        data = response.json().get("results", []) # getting data
-        
-        for workouts in data:
-            if muscle in workouts["description"].lower():
-                index = recommendations.index(exercise)
-                recommendations[index] = workouts["name"]
-                break
+        # Fetch exercises targeting the specified muscle group
+        fetched_exercises = fetch_exercise_by_muscle_group([muscle_group.lower()])
+
+        if not fetched_exercises:
+            print(f"No exercises found targeting '{muscle_group}'.")
+            return recommendations
+
+        # Replace the exercise at the specified index with the first fetched exercise
+        if 0 <= index < len(recommendations):
+            old_exercise = recommendations[index]
+            new_exercise = fetched_exercises[0]  
+            recommendations[index] = new_exercise
+            print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
+            return recommendations
+        else:
+            print("Invalid index provided.")
+            return recommendations
+
+    except Exception as e:
+        print(f"An error occurred while updating the exercise: {str(e)}")
         return recommendations
+
     except requests.RequestException as e:
         return [f"Error fetching exercises: {str(e)}"]
 
@@ -207,7 +219,7 @@ if __name__ == "__main__":
         choice = input("Recommend exercises based on muscle or equipments: ").lower()
         while(choice!="muscle") and (choice!="equipments"):
             print("please choose between muscle or equipments")
-            choice = input("Recommend exercises based on muscle or equipment")
+            choice = input("Recommend exercises based on muscle or equipment: ")
         if(choice == "muscle"):
             print("\nPlease specify the muscle groups you'd like to target during your workout.")
             print("\nPlease choose only from the following: leg, arm, back, abs, cardio")
@@ -255,10 +267,10 @@ if __name__ == "__main__":
 
                 try:
                     # Get user input for updating an exercise
-                    exercise_to_update = input("\nEnter the name of the exercise you want to replace: ").strip()
+                    exercise_to_update = input("\nEnter the index of the exercise you want to replace: ").strip()
                     muscle_group = input("Enter the muscle group you'd like the new exercise to target: ").strip().lower()
 
-                    if exercise_to_update in exercises:
+                    if int(exercise_to_update) < len(exercises):
                         updated_recommendations = update_one_exercise(exercises, exercise_to_update, muscle_group)
                         print("\nUpdated Exercise Recommendations:")
                         for exercise in updated_recommendations:
