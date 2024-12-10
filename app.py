@@ -150,6 +150,7 @@ def clear_users_route():
     app.logger.warning("Attempting to clear all users. Ensure this route is secure.")
     try:
         clear_users()
+        accounts.clear()
         app.logger.info("All users cleared successfully.")
         return jsonify({"message": "All users cleared successfully."}), 200
     except Exception as e:
@@ -208,7 +209,7 @@ def api_add_target_group():
     
 @app.route('/api/remove-target-group', methods=['POST'])
 def api_remove_target_group():
-    try:
+    try: 
         data = request.get_json()
         username = data.get('username')
         group = data.get('group')
@@ -231,8 +232,7 @@ def api_remove_target_group():
 @app.route('/api/get-target-groups', methods=['GET'])
 def api_get_target_groups():
     try:
-        data = request.get_json()
-        username = data.get('username')
+        username = request.args.get('username')
         
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -442,17 +442,20 @@ def api_create_log():
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500
     
-@app.route('/api/clear-logs', methods=['GET'])
+@app.route('/api/clear-logs', methods=['POST'])
 def api_clear_logs():
     try:
-        username = request.args.get('username')
+        data = request.get_json()
+        username = data.get('username')
         
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
         
         result = clear_logs(username)
-        
-        return jsonify({"status": "success", "exercises": result}), 200
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
     except Exception as e:
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500

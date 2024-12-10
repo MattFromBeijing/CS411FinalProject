@@ -45,7 +45,7 @@ def clear_logs(username: str) -> bool:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM logs WHERE username = ?", (username))
+            cursor.execute("DELETE FROM logs WHERE username = ?", (username,))
             conn.commit()
 
             if cursor.rowcount == 0:

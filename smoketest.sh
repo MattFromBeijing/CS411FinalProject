@@ -153,7 +153,7 @@ remove_target_group() {
 get_target_groups() {
   username=$1
   echo "Fetching target groups for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/get-target-groups" --data-urlencode "username=$username")
+  response=$(curl -s -X GET "$BASE_URL/get-target-groups?username=$username")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Target groups fetched successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -218,7 +218,7 @@ remove_equipment() {
 get_available_equipment() {
   username=$1
   echo "Fetching available equipment for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/get-available-equipment" --data-urlencode "username=$username")
+  response=$(curl -s -X GET "$BASE_URL/get-available-equipment?username=$username")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Available equipment fetched successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -241,8 +241,7 @@ get_available_equipment() {
 find_exercise_by_target_groups() {
   username=$1
   echo "Finding exercises by target groups for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/find-exercise_by-target_groups" -H "Content-Type: application/json" \
-    --data-urlencode "username=$username")
+  response=$(curl -s -X GET "$BASE_URL/find-exercise_by-target_groups?username=$username")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Exercises found by target groups successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -259,10 +258,11 @@ find_exercise_by_target_groups() {
 find_exercise_by_groups() {
   username=$1
   groups=$2
+
+  groups_query=$(echo "$groups" | jq -r '.[]' | awk '{print "&groups=" $0}' | tr -d '\n')
+
   echo "Finding exercises by groups for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-groups" \
-    --data-urlencode "username=$username" \
-    --data-urlencode "groups=$groups")
+  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-groups?username=$username$groups_query")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Exercises found by groups successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -279,8 +279,7 @@ find_exercise_by_groups() {
 find_exercise_by_available_equipment() {
   username=$1
   echo "Finding exercises by available equipment for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-available-equipment" \
-    --data-urlencode "username=$username")
+  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-available-equipment?username=$username")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Exercises found by available equipment successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -297,10 +296,11 @@ find_exercise_by_available_equipment() {
 find_exercise_by_equipment() {
   username=$1
   equipment=$2
+
+  equipment_query=$(echo "$groups" | jq -r '.[]' | awk '{print "&equipment=" $0}' | tr -d '\n')
+
   echo "Finding exercises by specific equipment for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-available-equipment" \
-    --data-urlencode "username=$username" \
-    --data-urlencode "equipment=$equipment")
+  response=$(curl -s -X GET "$BASE_URL/find-exercise-by-available-equipment?username=$username$equipment_query")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Exercises found by specific equipment successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -327,7 +327,7 @@ create_log() {
   date=$4
   echo "Creating a log for user: $username..."
   response=$(curl -s -X POST "$BASE_URL/create-log" -H "Content-Type: application/json" \
-    -d "{\"username\":\"$username\", \"exercise_name\":\"$exercise_name\", \"muscle_groups\":$muscle_groups, \"date\":\"$date\"}")
+    -d "{\"username\":\"$username\", \"exercise_name\":\"$exercise_name\", \"muscle_groups\":\"$muscle_groups\", \"date\":\"$date\"}")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Log created successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -344,7 +344,7 @@ create_log() {
 clear_logs() {
   username=$1
   echo "Clearing all logs for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/clear-logs" --data-urlencode "username=$username")
+  response=$(curl -s -X POST "$BASE_URL/clear-logs" -H "Content-Type: application/json" -d "{\"username\":\"$username\"}")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Logs cleared successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -361,7 +361,7 @@ clear_logs() {
 get_all_logs() {
   username=$1
   echo "Fetching all logs for user: $username..."
-  response=$(curl -s -X GET "$BASE_URL/get-all-logs" --data-urlencode "username=$username")
+  response=$(curl -s -X GET "$BASE_URL/get-all-logs?username=$username")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Fetched all logs successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -379,7 +379,7 @@ get_log_by_date() {
   username=$1
   date=$2
   echo "Fetching logs for user: $username on date: $date..."
-  response=$(curl -s -X GET "$BASE_URL/get-log-by-date" --data-urlencode "username=$username" --data-urlencode "date=$date")
+  response=$(curl -s -X GET "$BASE_URL/get-log-by-date?username=$username&date=$date")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Fetched logs by date successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -400,7 +400,7 @@ update_log() {
   date=$4
   echo "Updating log for user: $username..."
   response=$(curl -s -X POST "$BASE_URL/update-log" -H "Content-Type: application/json" \
-    -d "{\"username\":\"$username\", \"exercise_name\":\"$exercise_name\", \"muscle_groups\":$muscle_groups, \"date\":\"$date\"}")
+    -d "{\"username\":\"$username\", \"exercise_name\":\"$exercise_name\", \"muscle_groups\":\"$muscle_groups\", \"date\":\"$date\"}")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Log updated successfully."
     if [ "$ECHO_JSON" = true ]; then
@@ -430,5 +430,28 @@ clear_all_users
 
 create_user "testuser" "password123"
 login_user "testuser" "password123"
+
+set_target_groups "testuser" '["leg", "arm"]'
+add_target_group "testuser" "back"
+remove_target_group "testuser" "back"
+get_target_groups "testuser"
+
+find_exercise_by_target_groups "testuser"
+find_exercise_by_groups "testuser" '["leg", "arm"]'
+
+set_equipment_list "testuser" '["dumbbell"]'
+add_equipment "testuser" "kettlebell"
+remove_equipment "testuser" "kettlebell"
+get_available_equipment "testuser"
+
+find_exercise_by_available_equipment "testuser"
+find_exercise_by_equipment "testuser" '["dumbbell"]'
+
+create_log "testuser" "Bench Press" "arm" "2024-12-10"
+create_log "testuser" "Leg Press" "leg" "2024-12-11"
+get_all_logs "testuser"
+get_log_by_date "testuser" "2024-12-10"
+update_log "testuser" "Swim" "cardio" "2024-12-10"
+clear_logs "testuser"
 
 echo "All smoketests passed successfully!"
