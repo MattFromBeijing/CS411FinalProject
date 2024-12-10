@@ -1,5 +1,6 @@
 import requests
 import logging
+import random
 from typing import List
 
 from dataclasses import dataclass
@@ -16,6 +17,10 @@ class Exercise:
     muscle_group: int
     equipment: str
     date: date
+
+@dataclass
+class Song:
+    name: str
 
 class RecommendationsModel:
     """
@@ -311,46 +316,115 @@ class RecommendationsModel:
             return recommendations
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
+
+    def update_one_exercise(self,recommendations,index,muscle):
+        """
+        Delete an exercise, add a new exercise, and updating the recommendations
+
+        Arg:
+            recommendations: list of the recommended exercises
+            index: index of the exercise that the user wants to update
+            muscle: string of which muscle group the user wants to target
+
+        Return:
+            recommendations: the new updated list of recommended exercises
+        """
+        params = {
+            "language": 2,  # default Language: English
+            "api_key": self.api_key  
+        }
+
+        try:
+            # Fetch exercises targeting the specified muscle group
+            fetched_exercises = fetch_exercise_by_many_muscle_group([muscle.lower()])
+
+            if not fetched_exercises:
+                print(f"No exercises found targeting '{muscle}'.")
+                return recommendations
+
+            if 0 <= index < len(recommendations):
+                old_exercise = recommendations[index]
+                new_exercise = fetched_exercises[0]  
+                recommendations[index] = new_exercise
+                print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
+                return recommendations
+            else:
+                print("Invalid index provided.")
+                return recommendations
+
+        except Exception as e:
+            print(f"An error occurred while updating the exercise: {str(e)}")
+            return recommendations
+
+        except requests.RequestException as e:
+            return [f"Error fetching exercises: {str(e)}"]
+
+######################################################
+#
+#    External API Calls (jamendo music api)
+#
+######################################################
             
-    # def update_one_exercise(recommendations,index,muscle):
-    #     """
-    #     Delete an exercise, add a new exercise, and updating the recommendations
+    def fetch_songs_based_on_workouts(workout_count):
+        """
+        Fetch songs from the Jamendo API based on the number of workouts.
 
-    #     Arg:
-    #         recommendations: list of the recommended exercises
-    #         index: index of the exercise that the user wants to update
-    #         muscle: string of which muscle group the user wants to target
+        Args:
+            workout_count : integer number of workouts completed by the user. It helps in determining the intensity.
 
-    #     Return:
-    #         recommendations: the new updated list of recommended exercises
-    #     """
-    #     params = {
-    #         "language": 2,  # default Language: English
-    #         "api_key": API_KEY  
-    #     }
+        Returns:
+            songs : list of song names and their artists based on workout count.
+        """
+        params = {
+            "client_id": "141e0653",
+        }
 
-    #     try:
-    #         # Fetch exercises targeting the specified muscle group
-    #         fetched_exercises = fetch_exercise_by_muscle_group([muscle_group.lower()])
+        duration_min = workout_count * 100
+        if(duration_min>500):
+            duration_min = 500
+        try:
+            response = requests.get("https://api.jamendo.com/v3.0/tracks/", params=params)
+            response.raise_for_status() 
+            data = response.json()
+        
+            if "results" in data:
+                songs = []
+                for song in data["results"]:
+                    if song.get("duration", 0) >= duration_min:
+                        song_name = song.get("name", "Unknown")
+                        artist_name = song.get("artist_name", "Unknown")
+                        songs.append(f"{song_name} by {artist_name}")
+                return songs
+            else:
+                return ["No songs found for the given criteria."]
+    
+        except requests.exceptions.RequestException as e:
+            return [f"An error occurred: {e}"]
+    
+    def fetch_random_song():
+        """
+        Fetch a random song from the Jamendo API.
 
-    #         if not fetched_exercises:
-    #             print(f"No exercises found targeting '{muscle_group}'.")
-    #             return recommendations
+        Returns:
+            str: A random song name and its artist.
+        """
+        params = {
+            "client_id": "141e0653",
+        }
 
-    #         if 0 <= index < len(recommendations):
-    #             old_exercise = recommendations[index]
-    #             new_exercise = fetched_exercises[0]  
-    #             recommendations[index] = new_exercise
-    #             print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
-    #             return recommendations
-    #         else:
-    #             print("Invalid index provided.")
-    #             return recommendations
-
-    #     except Exception as e:
-    #         print(f"An error occurred while updating the exercise: {str(e)}")
-    #         return recommendations
-
-    #     except requests.RequestException as e:
-    #         return [f"Error fetching exercises: {str(e)}"]
+        try:
+            response = requests.get("https://api.jamendo.com/v3.0/tracks/", params=params)
+            response.raise_for_status()
+            data = response.json()
+        
+            if "results" in data and len(data["results"]) > 0:
+                song = random.choice(data["results"])
+                song_name = song.get("name", "Unknown")
+                artist_name = song.get("artist_name", "Unknown")
+                return f"{song_name} by {artist_name}"
+            else:
+                return "No songs found."
+    
+        except requests.exceptions.RequestException as e:
+            return f"An error occurred: {e}"
     
