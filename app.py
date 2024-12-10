@@ -3,6 +3,8 @@ from flask import Flask, jsonify, make_response, Response, request
 from config import ProductionConfig, TestConfig
 from werkzeug.exceptions import BadRequest, Unauthorized
 import logging
+import requests
+import random
 
 from typing import Dict
 from workout.utils.logger import configure_logger
@@ -725,6 +727,123 @@ def api_update_log():
     except Exception as e:
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500
+
+##########################################################
+#
+# Song Management
+#
+##########################################################
+BASE_URL = "https://api.jamendo.com/v3.0/tracks/"
+API_KEY = "141e0653" 
+@app.route('/api/fetch-songs-by-workouts', methods=['GET'])
+def fetch_songs_by_workouts():
+    """
+    Route to fetch songs based on the number of workouts completed by the user.
+    
+    Query Parameters:
+        - workout_count (int): The number of workouts completed by the user.
+
+    Returns:
+        JSON response with a list of song names and their artists.
+    """
+    try:
+        workout_count = int(request.args.get('workout_count', 1))  # Default to 1 if not provided
+        
+        songs = fetch_songs_based_on_workouts(workout_count)
+        
+        if songs:
+            return jsonify({"status": "success", "songs": songs}), 200
+        else:
+            return jsonify({"status": "no songs found"}), 404
+        
+    except Exception as e:
+        logger.error(f"Error fetching songs by workouts: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/fetch-random-song', methods=['GET'])
+def fetch_random_song_route():
+    """
+    Route to fetch a random song from the Jamendo API.
+    
+    Returns:
+        JSON response with a random song name and artist.
+    """
+    try:
+        song = fetch_random_song()
+        
+        return jsonify({"status": "success", "song": song}), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching random song: {e}")
+        return jsonify({"error": str(e)}), 500
+
+def fetch_songs_based_on_workouts(workout_count):
+    """
+    Fetch songs from the Jamendo API based on the number of workouts.
+
+    Args:
+        workout_count : integer number of workouts completed by the user. It helps in determining the intensity.
+
+    Returns:
+        songs : list of song names and their artists based on workout count.
+    """
+    params = {
+        "client_id": API_KEY,
+    }
+
+    duration_min = workout_count * 100
+    if duration_min > 500:
+        duration_min = 500
+        
+    try:
+        response = requests.get(BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        if "results" in data:
+            songs = []
+            for song in data["results"]:
+                if song.get("duration", 0) >= duration_min:
+                    song_name = song.get("name", "Unknown")
+                    artist_name = song.get("artist_name", "Unknown")
+                    songs.append(f"{song_name} by {artist_name}")
+            
+            return songs
+        else:
+            return []
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching songs based on workouts: {e}")
+        return [f"An error occurred: {e}"]
+
+def fetch_random_song():
+    """
+    Fetch a random song from the Jamendo API.
+
+    Returns:
+        str: A random song name and its artist.
+    """
+    params = {
+        "client_id": API_KEY,
+    }
+
+    try:
+        response = requests.get(BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        if "results" in data and len(data["results"]) > 0:
+            song = random.choice(data["results"])
+            song_name = song.get("name", "Unknown")
+            artist_name = song.get("artist_name", "Unknown")
+            return f"{song_name} by {artist_name}"
+        else:
+            return "No songs found."
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching random song: {e}")
+        return f"An error occurred: {e}"
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
