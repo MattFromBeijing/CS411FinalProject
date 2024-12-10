@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from config import ProductionConfig, TestConfig
 from werkzeug.exceptions import BadRequest, Unauthorized
+import logging
 
 from typing import Dict
 from workout.utils.logger import configure_logger
@@ -227,6 +228,24 @@ def api_remove_target_group():
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500
     
+@app.route('/api/get-target-groups', methods=['GET'])
+def api_get_target_groups():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        groups = model.get_target_groups()
+        
+        return jsonify({"status": "success", "groups": groups}), 200
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
 ##########################################################
 #
 # Equipment Management
@@ -299,6 +318,23 @@ def api_remove_available_equipment():
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500
     
+@app.route('/api/get-available-equipment', methods=['GET'])
+def api_get_available_equipment():
+    try:
+        username = request.args.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        equipment = model.get_equipment()
+        
+        return jsonify({"status": "success", "equipment": equipment}), 200
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
 ##########################################################
 #
 # Finding Exercises (external API calls)
@@ -308,8 +344,7 @@ def api_remove_available_equipment():
 @app.route('/api/find-exercise_by-target_groups', methods=['GET'])
 def api_find_exercise_by_target_groups():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
+        username = request.args.get('username')
         
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -327,9 +362,8 @@ def api_find_exercise_by_target_groups():
 @app.route('/api/find-exercise-by-groups', methods=['GET'])
 def api_find_exercise_by_groups():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
-        groups = data.request.args.getlist('groups')
+        username = request.args.get('username')
+        groups = request.args.getlist('groups')
 
         if not username or not groups: return jsonify({"error": "username and groups required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -346,8 +380,7 @@ def api_find_exercise_by_groups():
 @app.route('/api/find-exercise-by-available-equipment', methods=['GET'])
 def api_find_exercise_by_available_equipment():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
+        username = request.args.get('username')
 
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -412,8 +445,7 @@ def api_create_log():
 @app.route('/api/clear-logs', methods=['GET'])
 def api_clear_logs():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
+        username = request.args.get('username')
         
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -428,8 +460,7 @@ def api_clear_logs():
 @app.route('/api/get-all-logs', methods=['GET'])
 def api_get_all_logs():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
+        username = request.args.get('username')
         
         if not username: return jsonify({"error": "username required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -444,9 +475,8 @@ def api_get_all_logs():
 @app.route('/api/get-log-by-date', methods=['GET'])
 def api_get_log_by_date():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
-        date = data.request.args.get('date')
+        username = request.args.get('username')
+        date = request.args.get('date')
         
         if not username or not date: return jsonify({"error": "username and date required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
@@ -461,9 +491,8 @@ def api_get_log_by_date():
 @app.route('/api/get-log-by-muscle-group', methods=['GET'])
 def api_get_logs_by_muscle_group():
     try:
-        data = request.get_json()
-        username = data.request.args.get('username')
-        muscle_group = data.request.args.get('muscle_group')
+        username = request.args.get('username')
+        muscle_group = request.args.get('muscle_group')
         
         if not username or not muscle_group: return jsonify({"error": "username and muscle_group required"}), 400
         if username not in accounts: return jsonify({"error": "username not found"}), 404
