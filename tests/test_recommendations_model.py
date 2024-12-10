@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import pytest
 import requests
+from pytest_mock import mocker
 from datetime import datetime
 from datetime import date
 
@@ -61,10 +62,11 @@ def sample_target_song_list():
 #
 ######################################################
 
-def test_set_target_groups(recommendations_model, sample_target_group_list):
-    """Test setting multiple target muscle groups at once."""
-    result = recommendations_model.set_target_groups(sample_target_group_list)
-    assert recommendations_model.target_groups == sample_target_group_list
+def test_set_target_songs(recommendations_model, sample_target_song_list):
+    """Test setting multiple target songs at once."""
+    recommendations_model.target_song = []  
+    result = recommendations_model.set_target_songs(sample_target_song_list)
+    assert recommendations_model.target_song == sample_target_song_list
     assert result == True
     
 def test_set_target_groups_invalid_groups(recommendations_model):
@@ -203,70 +205,70 @@ def test_get_equipment(recommendations_model, sample_equipment1):
 #
 ######################################################
 
-def test_set_target_songs(song_recommendation_manager, sample_song_list):
+def test_set_target_songs(recommendations_model, sample_target_song_list):
     """Test setting multiple target songs at once."""
-    result = song_recommendation_manager.set_target_songs(sample_song_list)
-    assert song_recommendation_manager.target_songs == sample_song_list
+    result = recommendations_model.set_target_songs(sample_target_song_list)
+    assert recommendations_model.target_song == sample_target_song_list
     assert result is True
 
-def test_set_target_songs_invalid_songs(song_recommendation_manager):
+def test_set_target_songs_invalid_songs(recommendations_model):
     """Test setting invalid songs."""
     with pytest.raises(ValueError, match="Invalid songs list provided. Songs list must be non-empty."):
-        song_recommendation_manager.set_target_songs([])
+        recommendations_model.set_target_songs([])
         
     with pytest.raises(ValueError, match="Invalid songs list provided. Songs list must be non-empty."):
-        song_recommendation_manager.set_target_songs([""])
+        recommendations_model.set_target_songs([""])
 
-def test_add_target_song(song_recommendation_manager, sample_song1):
+def test_add_target_song(recommendations_model, sample_target_song1):
     """Test adding a single target song."""
-    result = song_recommendation_manager.add_target_song(sample_song1)
-    assert song_recommendation_manager.target_songs == [sample_song1]
+    result = recommendations_model.add_target_song(sample_target_song1)
+    assert recommendations_model.target_song == [sample_target_song1]
     assert result is True
 
-def test_add_target_song_duplicate(song_recommendation_manager, sample_song1):
+def test_add_target_song_duplicate(recommendations_model, sample_target_song1):
     """Test adding a duplicate target song."""
-    song_recommendation_manager.add_target_song(sample_song1)
-    result = song_recommendation_manager.add_target_song(sample_song1)
-    assert song_recommendation_manager.target_songs == [sample_song1]
+    recommendations_model.add_target_song(sample_target_song1)
+    result = recommendations_model.add_target_song(sample_target_song1)
+    assert recommendations_model.target_song == [sample_target_song1]
     assert result is False
 
-def test_add_target_song_invalid_song(song_recommendation_manager):
+def test_add_target_song_invalid_song(recommendations_model):
     """Test adding an invalid target song."""
     with pytest.raises(ValueError, match="Invalid song name provided. Song name must be non-empty."):
-        song_recommendation_manager.add_target_song("")
+        recommendations_model.add_target_song("")
 
-def test_remove_target_song(song_recommendation_manager, sample_song1, sample_song2):
+def test_remove_target_song(recommendations_model, sample_target_song1, sample_target_song2):
     """Test removing a target song."""
-    song_recommendation_manager.add_target_song(sample_song1)
-    song_recommendation_manager.add_target_song(sample_song2)
-    assert song_recommendation_manager.target_songs == [sample_song1, sample_song2]
+    recommendations_model.add_target_song(sample_target_song1)
+    recommendations_model.add_target_song(sample_target_song2)
+    assert recommendations_model.target_song == [sample_target_song1, sample_target_song2]
     
-    result = song_recommendation_manager.remove_target_song(sample_song1)
-    assert song_recommendation_manager.target_songs == [sample_song2]
+    result = recommendations_model.remove_target_song(sample_target_song1)
+    assert recommendations_model.target_song == [sample_target_song2]
     assert result is True
 
-def test_remove_target_song_not_found(song_recommendation_manager, sample_song1, sample_song2):
+def test_remove_target_song_not_found(recommendations_model, sample_song1, sample_song2):
     """Test removing a song not in the target songs."""
-    song_recommendation_manager.add_target_song(sample_song1)
-    assert song_recommendation_manager.target_songs == [sample_song1]
+    recommendations_model.add_target_song(sample_song1)
+    assert recommendations_model.target_song == [sample_song1]
     
-    result = song_recommendation_manager.remove_target_song(sample_song2)
-    assert song_recommendation_manager.target_songs == [sample_song1]
+    result = recommendations_model.remove_target_song(sample_song2)
+    assert recommendations_model.target_song == [sample_song1]
     assert result is False
 
-def test_remove_target_song_invalid_song(song_recommendation_manager):
+def test_remove_target_song_invalid_song(recommendations_model):
     """Test removing an invalid song."""
     with pytest.raises(ValueError, match="Invalid song name provided. Song name must be non-empty."):
-        song_recommendation_manager.remove_target_song("")
+        recommendations_model.remove_target_song("")
 
-def test_get_target_songs(song_recommendation_manager, sample_song1):
+def test_get_target_songs(recommendations_model, sample_target_song1):
     """Test retrieving the list of target songs."""
-    result = song_recommendation_manager.get_target_songs()
+    result = recommendations_model.get_target_songs()
     assert result == []
     
-    song_recommendation_manager.add_target_song(sample_song1)
-    result = song_recommendation_manager.get_target_songs()
-    assert result == [sample_song1]
+    recommendations_model.add_target_song(sample_target_song1)
+    result = recommendations_model.get_target_songs()
+    assert result == [sample_target_song1]
         
 ######################################################
 #

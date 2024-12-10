@@ -219,7 +219,7 @@ class RecommendationsModel:
         if len(new_songs) == 0 or "" in new_songs:
             raise ValueError("Invalid songs list provided. Songs list must be non-empty.")
              
-        self.target_songs = new_songs
+        self.target_song = new_songs
         return True
 
     def add_target_song(self, new_song: str) -> bool:
@@ -238,8 +238,8 @@ class RecommendationsModel:
         if len(new_song) == 0:
             raise ValueError("Invalid song name provided. Song name must be non-empty.")
         
-        if new_song not in self.target_songs:
-            self.target_songs.append(new_song)
+        if new_song not in self.target_song:
+            self.target_song.append(new_song)
             return True
         else:
             return False
@@ -260,8 +260,8 @@ class RecommendationsModel:
         if len(song) == 0:
             raise ValueError("Invalid song name provided. Song name must be non-empty.")
         
-        if song in self.target_songs:
-            self.target_songs.remove(song)
+        if song in self.target_song:
+            self.target_song.remove(song)
             return True
         else:
             return False
@@ -273,7 +273,7 @@ class RecommendationsModel:
         Returns:
             List[str]: The list of target songs.
         """
-        return self.target_songs
+        return self.target_song
 
 ######################################################
 #
