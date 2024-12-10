@@ -1,7 +1,5 @@
 from contextlib import contextmanager
 import re
-import sqlite3
-
 import pytest
 
 from workout.models.log_model import (
@@ -15,9 +13,7 @@ from workout.models.log_model import (
 )
 
 ######################################################
-#
 #    Fixtures
-#
 ######################################################
 
 def normalize_whitespace(sql_query: str) -> str:
@@ -45,9 +41,7 @@ def mock_cursor(mocker):
     return mock_cursor  # Return the mock cursor so we can set expectations per test
 
 ######################################################
-#
 #    Creating logs
-#
 ######################################################
 
 def test_create_log(mock_cursor):
@@ -81,9 +75,7 @@ def test_create_log_invalid_date(mock_cursor):
         create_log(user_id=123, exercise_name="Bench Press", muscle_groups="1, 2", date="9/12")
 
 ######################################################
-#
 #    Deleting logs
-#
 ######################################################
 
 def test_clear_logs(mock_cursor):
@@ -112,9 +104,7 @@ def test_clear_logs_no_logs_found(mock_cursor):
         clear_logs(123)
 
 ######################################################
-#
 #    Getting logs
-#
 ######################################################
 
 def test_get_all_logs(mock_cursor):
@@ -249,9 +239,7 @@ def test_get_logs_by_muscle_group_no_logs_found(mock_cursor):
     assert expected_result == result, f"Expected \'{expected_result}\', got \'{result}\' when logs were successfully retrieved." 
 
 ######################################################
-#
 #    Updating logs
-#
 ######################################################
 
 def test_update_log(mock_cursor):

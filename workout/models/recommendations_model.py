@@ -29,30 +29,65 @@ class RecommendationsModel:
     """
 
     def __init__(self, user_id, API_KEY):
-        """
-        Initializes the ExercisesModel with an empty target_groups and empty exercises
-        """
         self.base_url: str = "https://wger.de/api/v2/exercisebaseinfo/"
         self.api_key: str = API_KEY
         self.user_id: int = user_id
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
 
-    def set_target_groups(self, new_groups: List[str]) -> bool:        
+    def set_target_groups(self, new_groups: List[str]) -> bool:   
+        if len(new_groups) == 0 and "" not in new_groups:
+            raise ValueError("Invalid muscle groups list provided. Muscle groups list must be non-empty.")
+             
         self.target_groups = new_groups
         return True
 
     def add_target_group(self, new_group: str) -> bool:
-        self.target_groups.append(new_group)
-        return True
+        if len(new_group) == 0:
+            raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
+        
+        if new_group not in self.target_groups:
+            self.target_groups.append(new_group)
+            return True
+        else:
+            return False
+    
+    def remove_target_group(self, group: str) -> bool:
+        if len(group) == 0:
+            raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
+        
+        if group in self.target_groups:
+            self.target_groups.remove(group)
+            return True
+        else:
+            return False
 
     def set_equipment(self, new_equipment: List[str]) -> bool:
+        if len(new_equipment) == 0 and new_equipment not in self.equipment:
+            raise ValueError("Invalid equipment list provided. Equipment list must be non-empty.")
+        
         self.equipment = new_equipment
         return True
 
     def add_equipment(self, new_equipment: str) -> bool:
-        self.equipment.append(new_equipment)
-        return True
+        if len(new_equipment) == 0:
+            raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
+        
+        if new_equipment not in self.equipment:
+            self.equipment.append(new_equipment)
+            return True
+        else:
+            return False
+    
+    def remove_equipment(self, equipment: str) -> bool:
+        if len(equipment) == 0:
+            raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
+        
+        if equipment in self.equipment:
+            self.equipment.remove(equipment)
+            return True
+        else:
+            return False
     
     def get_exercises_by_one_muscle_group(self, muscle_group: str) -> List[Exercise]:
         """
@@ -64,6 +99,9 @@ class RecommendationsModel:
         Return:
             recommendations: list of recommended exercises
         """
+        if len(muscle_group) == 0:
+            raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
+        
         params = {
             "language": 2,  # default Language: English
             "api_key": self.api_key
@@ -175,7 +213,7 @@ class RecommendationsModel:
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
 
-    def get_exercises_by_one_equipment(self, equipment: str) -> List[Exercise]: 
+    def get_exercises_by_one_equipment(self, equipment: str) -> List[Exercise]:
         '''
         Fetch exercises based on the user's preferred equipment.
 
@@ -185,6 +223,9 @@ class RecommendationsModel:
         Return:
             recommendations: list of recommended exercises
         '''
+        if len(equipment) == 0:
+            raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
+        
         params = {
             "language": 2,  # default Language: English
             "api_key": self.api_key

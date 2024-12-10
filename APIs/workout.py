@@ -77,6 +77,8 @@ def fetch_exercise_by_muscle_group(list_of_muscle_group):
         response = requests.get(BASE_URL, params=params, headers={"Authorization": f"Token {API_KEY}"})
         response.raise_for_status()
         data = response.json().get("results", []) # getting data
+        
+        print(data)
 
         # Recommendation logic based on time and target muscle
         recommendations = []
@@ -147,6 +149,8 @@ def fetch_exercises_by_equipments(equipmentslist):
         response = requests.get(BASE_URL, params=params, headers={"Authorization": f"Token {API_KEY}"})
         response.raise_for_status()
         data = response.json().get("results", []) # getting data
+        
+        print(data)
 
         # Recommendation logic based on time and target muscle
         recommendations = []
