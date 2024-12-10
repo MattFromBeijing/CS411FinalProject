@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 import pytest
+import requests
 from datetime import datetime
+from datetime import date
 
 from workout.models.recommendations_model import (
     Exercise,
@@ -40,6 +42,18 @@ def sample_equipment2():
 @pytest.fixture
 def sample_equipment_list():
     return ["dumbbell", "kettlebell"]
+
+@pytest.fixture
+def sample_target_song1():
+    return "Song A"
+
+@pytest.fixture
+def sample_target_song2():
+    return "Song B"
+
+@pytest.fixture
+def sample_target_song_list():
+    return ["Song A", "Song B"]
 
 ######################################################
 #
@@ -182,6 +196,77 @@ def test_get_equipment(recommendations_model, sample_equipment1):
     recommendations_model.add_equipment(sample_equipment1)
     result = recommendations_model.get_equipment()
     assert result == [sample_equipment1]
+
+######################################################
+#
+#    target songs
+#
+######################################################
+
+def test_set_target_songs(song_recommendation_manager, sample_song_list):
+    """Test setting multiple target songs at once."""
+    result = song_recommendation_manager.set_target_songs(sample_song_list)
+    assert song_recommendation_manager.target_songs == sample_song_list
+    assert result is True
+
+def test_set_target_songs_invalid_songs(song_recommendation_manager):
+    """Test setting invalid songs."""
+    with pytest.raises(ValueError, match="Invalid songs list provided. Songs list must be non-empty."):
+        song_recommendation_manager.set_target_songs([])
+        
+    with pytest.raises(ValueError, match="Invalid songs list provided. Songs list must be non-empty."):
+        song_recommendation_manager.set_target_songs([""])
+
+def test_add_target_song(song_recommendation_manager, sample_song1):
+    """Test adding a single target song."""
+    result = song_recommendation_manager.add_target_song(sample_song1)
+    assert song_recommendation_manager.target_songs == [sample_song1]
+    assert result is True
+
+def test_add_target_song_duplicate(song_recommendation_manager, sample_song1):
+    """Test adding a duplicate target song."""
+    song_recommendation_manager.add_target_song(sample_song1)
+    result = song_recommendation_manager.add_target_song(sample_song1)
+    assert song_recommendation_manager.target_songs == [sample_song1]
+    assert result is False
+
+def test_add_target_song_invalid_song(song_recommendation_manager):
+    """Test adding an invalid target song."""
+    with pytest.raises(ValueError, match="Invalid song name provided. Song name must be non-empty."):
+        song_recommendation_manager.add_target_song("")
+
+def test_remove_target_song(song_recommendation_manager, sample_song1, sample_song2):
+    """Test removing a target song."""
+    song_recommendation_manager.add_target_song(sample_song1)
+    song_recommendation_manager.add_target_song(sample_song2)
+    assert song_recommendation_manager.target_songs == [sample_song1, sample_song2]
+    
+    result = song_recommendation_manager.remove_target_song(sample_song1)
+    assert song_recommendation_manager.target_songs == [sample_song2]
+    assert result is True
+
+def test_remove_target_song_not_found(song_recommendation_manager, sample_song1, sample_song2):
+    """Test removing a song not in the target songs."""
+    song_recommendation_manager.add_target_song(sample_song1)
+    assert song_recommendation_manager.target_songs == [sample_song1]
+    
+    result = song_recommendation_manager.remove_target_song(sample_song2)
+    assert song_recommendation_manager.target_songs == [sample_song1]
+    assert result is False
+
+def test_remove_target_song_invalid_song(song_recommendation_manager):
+    """Test removing an invalid song."""
+    with pytest.raises(ValueError, match="Invalid song name provided. Song name must be non-empty."):
+        song_recommendation_manager.remove_target_song("")
+
+def test_get_target_songs(song_recommendation_manager, sample_song1):
+    """Test retrieving the list of target songs."""
+    result = song_recommendation_manager.get_target_songs()
+    assert result == []
+    
+    song_recommendation_manager.add_target_song(sample_song1)
+    result = song_recommendation_manager.get_target_songs()
+    assert result == [sample_song1]
         
 ######################################################
 #
@@ -325,3 +410,121 @@ def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_e
     expected_results = [Exercise(name='Axe Hold', muscle_group='No muscles targeted', equipment='Dumbbell', date=formatted_date)]
     
     assert result == expected_results
+
+
+def test_update_one_exercise(mocker, recommendations_model, sample_recommendations, sample_muscle_group, mock_api_response):
+    """Test updating an exercise in the recommendations list."""
+    mocker.patch("requests.get", return_value=mock_api_response)
+    
+    assert len(sample_recommendations) == 2
+    
+    updated_recommendations = recommendations_model.update_one_exercise(sample_recommendations, 0, sample_muscle_group)
+    
+    assert len(updated_recommendations) == 2 
+    assert updated_recommendations[0].name == "Barbell Squat" 
+    assert updated_recommendations[0].muscle_group == "Legs"
+    assert updated_recommendations[0].equipment == "Barbell"
+    assert updated_recommendations[0].date == date.today().strftime("%Y-%m-%d")
+    
+    assert updated_recommendations[1].name == "Push-up"
+
+def test_update_one_exercise_invalid_index(mocker, recommendations_model, sample_recommendations, sample_muscle_group, mock_api_response):
+    """Test updating an exercise with an invalid index."""
+    mocker.patch("requests.get", return_value=mock_api_response)
+    
+    updated_recommendations = recommendations_model.update_one_exercise(sample_recommendations, 10, sample_muscle_group)
+    
+    assert len(updated_recommendations) == 2  
+    assert updated_recommendations[0].name == "Squat" 
+    assert updated_recommendations[1].name == "Push-up"  
+
+
+######################################################
+#
+#    External API Calls (jamendo music api)
+#
+######################################################
+
+@pytest.fixture
+def mock_jamendo_response():
+    """Fixture to return a mock response for the Jamendo API."""
+    return {
+        "results": [
+            {
+                "name": "Song A",
+                "artist_name": "Artist A",
+                "duration": 300
+            },
+            {
+                "name": "Song B",
+                "artist_name": "Artist B",
+                "duration": 150
+            },
+            {
+                "name": "Song C",
+                "artist_name": "Artist C",
+                "duration": 500
+            }
+        ]
+    }
+
+# Test for fetch_songs_based_on_workouts function
+def test_fetch_songs_based_on_workouts(mocker, mock_jamendo_response,recommendations_model):
+    """Test fetching songs based on workout count."""
+    workout_count = 5  # Example workout count
+    
+    mocker.patch("requests.get", return_value=mock_jamendo_response)
+    
+    expected_songs = ["Song C by Artist C"]
+    
+    result = recommendations_model.fetch_songs_based_on_workouts(workout_count)
+    
+    assert result == expected_songs
+
+def test_fetch_songs_based_on_workouts_no_results(mocker,recommendations_model):
+    """Test the behavior when no songs match the criteria."""
+    workout_count = 1  # Example workout count
+    
+    mocker.patch("requests.get", return_value={"results": []})
+    
+    result = recommendations_model.fetch_songs_based_on_workouts(workout_count)
+    
+    assert result == ["No songs found for the given criteria."]
+
+def test_fetch_songs_based_on_workouts_api_error(mocker,recommendations_model):
+    """Test handling API request errors."""
+    workout_count = 3  # Example workout count
+    
+    mocker.patch("requests.get", side_effect=requests.exceptions.RequestException("API error"))
+    
+    result = recommendations_model.fetch_songs_based_on_workouts(workout_count)
+    
+    assert result == ["An error occurred: API error"]
+
+# Test for fetch_random_song function
+def test_fetch_random_song(mocker, mock_jamendo_response,recommendations_model):
+    """Test fetching a random song."""
+    
+    mocker.patch("requests.get", return_value=mock_jamendo_response)
+    
+    result = recommendations_model.fetch_random_song()
+    
+    assert "by" in result  
+
+def test_fetch_random_song_no_results(mocker,recommendations_model):
+    """Test the behavior when no songs are available."""
+    
+    mocker.patch("requests.get", return_value={"results": []})
+    
+    result = recommendations_model.fetch_random_song()
+    
+    assert result == "No songs found."
+
+def test_fetch_random_song_api_error(mocker,recommendations_model):
+    """Test handling API request errors."""
+    
+    mocker.patch("requests.get", side_effect=requests.exceptions.RequestException("API error"))
+    
+    result = recommendations_model.fetch_random_song()
+    
+    assert result == "An error occurred: API error"
