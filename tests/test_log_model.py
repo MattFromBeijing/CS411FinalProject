@@ -2,15 +2,7 @@ from contextlib import contextmanager
 import re
 import pytest
 
-from workout.models.log_model import (
-    Log,
-    create_log,
-    clear_logs,
-    get_all_logs,
-    get_log_by_date,
-    get_logs_by_muscle_group,
-    update_log,
-)
+from workout.models.log_model import *
 
 ######################################################
 #
@@ -66,17 +58,33 @@ def test_create_log(mock_cursor):
 
     assert result is True, "The function did not return True when log was successfully created."
 
-def test_create_log_invalid_exercise_name(mock_cursor):
+def test_create_log_invalid_exercise_name():
     """Test creating a new log entry with an invalid exercise_name."""
 
     with pytest.raises(ValueError, match="Invalid exercise name provided. exercise_name must be an string with length greater than 0."):
         create_log(username="Matthew", exercise_name="", muscle_groups="1, 2", date="2024-12-01")
 
-def test_create_log_invalid_date(mock_cursor):
-    """Test creating a new log entry with an invalid date"""
+def test_create_log_invalid_date():
+    """Test creating a new log entry with an invalid date."""
 
     with pytest.raises(ValueError, match="Invalid date format provided: 9/12. date must be in format: YYYY-MM-DD"):
         create_log(username="Matthew", exercise_name="Bench Press", muscle_groups="1, 2", date="9/12")
+
+def test_create_log_duplicate(mock_cursor):
+    """Test creating a new log entry that already exists."""
+    
+    mock_cursor.fetchall.return_value = [("Matthew", "Bench Press", "1, 2", "2024-12-10")]
+
+    with pytest.raises(ValueError, match="Duplicate date=2024-12-10 for user=Matthew."):
+        create_log("Matthew", "Leg Press", "3, 4", "2024-12-10")
+        
+    expected_query = normalize_whitespace("SELECT * FROM logs WHERE username = ? AND date = ?")
+    actual_query = normalize_whitespace(mock_cursor.execute.call_args[0][0])
+    assert expected_query == actual_query, f"Expected \'{expected_query}\', got {actual_query}"
+    
+    expected_arguments = ("Matthew", "2024-12-10")
+    actual_arguments = mock_cursor.execute.call_args[0][1]
+    assert expected_arguments == actual_arguments, f"Expected \'{expected_arguments}\' got {actual_arguments}."
 
 ######################################################
 #
@@ -95,7 +103,7 @@ def test_clear_logs(mock_cursor):
     actual_query = normalize_whitespace(mock_cursor.execute.call_args[0][0])
     assert expected_query == actual_query, f"Expected \'{expected_query}\', got {actual_query}"
 
-    expected_arguments = ("Matthew")
+    expected_arguments = ("Matthew",)
     actual_arguments = mock_cursor.execute.call_args[0][1]
     assert expected_arguments == actual_arguments, f"Expected \'{expected_arguments}\', got {actual_arguments}."
 
@@ -108,6 +116,37 @@ def test_clear_logs_no_logs_found(mock_cursor):
 
     with pytest.raises(ValueError, match="No logs found for username=Matthew"):
         clear_logs("Matthew")
+
+def test_delete_log_by_date(mock_cursor):
+    """Test deleting a log by date for a user with logs."""
+
+    mock_cursor.rowcount = 1
+    
+    result = delete_log_by_date("Matthew", "2024-12-10")
+    
+    expected_query = normalize_whitespace("DELETE FROM logs WHERE username = ? AND date = ?")
+    actual_query = normalize_whitespace(mock_cursor.execute.call_args[0][0])
+    assert expected_query == actual_query, f"Expected \'{expected_query}\', got {actual_query}"
+
+    expected_arguments = ("Matthew", "2024-12-10")
+    actual_arguments = mock_cursor.execute.call_args[0][1]
+    assert expected_arguments == actual_arguments, f"Expected \'{expected_arguments}\', got {actual_arguments}."
+
+    assert result is True, "The function did not return True when logs were successfully cleared."
+    
+def test_delete_log_by_date_invalid_date():
+    """Test deleting a log by date for a user with an invalid date."""
+
+    with pytest.raises(ValueError, match="Invalid date format provided: 9/12. date must be in format: YYYY-MM-DD"):
+        delete_log_by_date(username="Matthew", date="9/12")
+        
+def test_delete_log_by_date_no_logs_found(mock_cursor):
+    """Test deleting a logs for a user with no logs."""
+
+    mock_cursor.rowcount = 0
+
+    with pytest.raises(ValueError, match="No logs found for username=Matthew and date=2024-12-10"):
+        delete_log_by_date(username="Matthew", date="2024-12-10")
 
 ######################################################
 #
@@ -173,7 +212,7 @@ def test_get_log_by_date(mock_cursor):
     expected_result = Log(1, "Matthew", "Bench Press", "1, 2", "2024-12-01")
     assert expected_result == result, f"Expected \'{expected_result}\', got \'{result}\' when logs were successfully retrieved."
 
-def test_get_log_by_date_invalid_date(mock_cursor):
+def test_get_log_by_date_invalid_date():
     """Test getting all logs from a user with invalid date."""
 
     with pytest.raises(ValueError, match="Invalid date format provided: \'9/12\'. date must be in format: YYYY-MM-DD"):

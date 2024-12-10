@@ -28,6 +28,16 @@ def create_log(username: str, exercise_name: str, muscle_groups: str, date: str)
         date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError as e:
         raise ValueError(f"Invalid date format provided: {date}. date must be in format: YYYY-MM-DD")
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM logs WHERE username = ? AND date = ?", (username, date,))
+            rows = cursor.fetchall()
+        if len(rows) > 0:
+            raise ValueError(f"Duplicate date={date} for user={username}.")
+    except sqlite3.Error as e:
+        raise sqlite3.Error(f"Database error: {str(e)}")
 
     try:
         with get_db_connection() as conn:
@@ -50,6 +60,24 @@ def clear_logs(username: str) -> bool:
 
             if cursor.rowcount == 0:
                 raise ValueError(f"No logs found for username={username}")
+        return True
+    except sqlite3.Error as e:
+        raise sqlite3.Error(f"Database error: {str(e)}")
+    
+def delete_log_by_date(username: str, date: str) -> bool:
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError as e:
+        raise ValueError(f"Invalid date format provided: {date}. date must be in format: YYYY-MM-DD")
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM logs WHERE username = ? AND date = ?", (username, date))
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                raise ValueError(f"No logs found for username={username} and date={date}")
         return True
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
@@ -118,7 +146,6 @@ def get_logs_by_muscle_group(username: str, muscle_groups: str) -> List[Log]:
 
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
-
 
 def update_log(username: str, date: str, exercise_name: str, muscle_groups: str) -> bool:
     try:

@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import pytest
+from datetime import datetime
 
 from workout.models.recommendations_model import (
     Exercise,
@@ -213,10 +214,12 @@ def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, samp
             }
         ]
     }
-    
     result = recommendations_model.get_exercises_by_many_muscle_groups(sample_target_group_list)
-    expected_results = [Exercise(name='Barbell Squat', muscle_group='No muscles targeted', equipment='No equipment required', date='2024-12-10')]
-
+    
+    now = datetime.now()
+    formatted_date = now.strftime("%Y-%m-%d")
+    expected_results = [Exercise(name='Barbell Squat', muscle_group='No muscles targeted', equipment='No equipment required', date=formatted_date)]
+    
     assert result == expected_results
 
 def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_equipment_list):
@@ -296,5 +299,9 @@ def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_e
         ]
     }
     result = recommendations_model.get_exercises_by_many_equipment(sample_equipment_list)
-    expected_results = [Exercise(name='Axe Hold', muscle_group='No muscles targeted', equipment='Dumbbell', date='2024-12-10')]
+    
+    now = datetime.now()
+    formatted_date = now.strftime("%Y-%m-%d")
+    expected_results = [Exercise(name='Axe Hold', muscle_group='No muscles targeted', equipment='Dumbbell', date=formatted_date)]
+    
     assert result == expected_results

@@ -198,45 +198,45 @@ class RecommendationsModel:
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
             
-    def update_one_exercise(recommendations,index,muscle):
-        """
-        Delete an exercise, add a new exercise, and updating the recommendations
+    # def update_one_exercise(recommendations,index,muscle):
+    #     """
+    #     Delete an exercise, add a new exercise, and updating the recommendations
 
-        Arg:
-            recommendations: list of the recommended exercises
-            index: index of the exercise that the user wants to update
-            muscle: string of which muscle group the user wants to target
+    #     Arg:
+    #         recommendations: list of the recommended exercises
+    #         index: index of the exercise that the user wants to update
+    #         muscle: string of which muscle group the user wants to target
 
-        Return:
-            recommendations: the new updated list of recommended exercises
-        """
-        params = {
-            "language": 2,  # default Language: English
-            "api_key": API_KEY  
-        }
+    #     Return:
+    #         recommendations: the new updated list of recommended exercises
+    #     """
+    #     params = {
+    #         "language": 2,  # default Language: English
+    #         "api_key": API_KEY  
+    #     }
 
-        try:
-            # Fetch exercises targeting the specified muscle group
-            fetched_exercises = fetch_exercise_by_muscle_group([muscle_group.lower()])
+    #     try:
+    #         # Fetch exercises targeting the specified muscle group
+    #         fetched_exercises = fetch_exercise_by_muscle_group([muscle_group.lower()])
 
-            if not fetched_exercises:
-                print(f"No exercises found targeting '{muscle_group}'.")
-                return recommendations
+    #         if not fetched_exercises:
+    #             print(f"No exercises found targeting '{muscle_group}'.")
+    #             return recommendations
 
-            if 0 <= index < len(recommendations):
-                old_exercise = recommendations[index]
-                new_exercise = fetched_exercises[0]  
-                recommendations[index] = new_exercise
-                print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
-                return recommendations
-            else:
-                print("Invalid index provided.")
-                return recommendations
+    #         if 0 <= index < len(recommendations):
+    #             old_exercise = recommendations[index]
+    #             new_exercise = fetched_exercises[0]  
+    #             recommendations[index] = new_exercise
+    #             print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
+    #             return recommendations
+    #         else:
+    #             print("Invalid index provided.")
+    #             return recommendations
 
-        except Exception as e:
-            print(f"An error occurred while updating the exercise: {str(e)}")
-            return recommendations
+    #     except Exception as e:
+    #         print(f"An error occurred while updating the exercise: {str(e)}")
+    #         return recommendations
 
-        except requests.RequestException as e:
-            return [f"Error fetching exercises: {str(e)}"]
+    #     except requests.RequestException as e:
+    #         return [f"Error fetching exercises: {str(e)}"]
     

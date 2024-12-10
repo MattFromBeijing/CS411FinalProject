@@ -358,6 +358,24 @@ clear_logs() {
   fi
 }
 
+delete_log_by_date() {
+  username=$1
+  date=$2
+  echo "Delete $date log for user: $username..."
+  response=$(curl -s -X POST "$BASE_URL/delete-log-by-date" -H "Content-Type: application/json" -d "{\"username\":\"$username\", \"date\":\"$date\"}")
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Logs cleared successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Response JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to clear logs."
+    echo "$response"
+    exit 1
+  fi
+}
+
 get_all_logs() {
   username=$1
   echo "Fetching all logs for user: $username..."
@@ -423,35 +441,42 @@ update_log() {
 check_health
 clear_all_users
 
-create_user "testuser" "password123"
-login_user "testuser" "password123"
-update_password "testuser" "newpassword123"
+create_user "testuser1" "password123"
+login_user "testuser1" "password123"
+update_password "testuser1" "newpassword123"
 clear_all_users
 
-create_user "testuser" "password123"
-login_user "testuser" "password123"
+create_user "testuser1" "password123"
+login_user "testuser1" "password123"
 
-set_target_groups "testuser" '["leg", "arm"]'
-add_target_group "testuser" "back"
-remove_target_group "testuser" "back"
-get_target_groups "testuser"
+set_target_groups "testuser1" '["leg", "arm"]'
+add_target_group "testuser1" "back"
+remove_target_group "testuser1" "back"
+get_target_groups "testuser1"
 
-find_exercise_by_target_groups "testuser"
-find_exercise_by_groups "testuser" '["leg", "arm"]'
+find_exercise_by_target_groups "testuser1"
+find_exercise_by_groups "testuser1" '["leg", "arm"]'
 
-set_equipment_list "testuser" '["dumbbell"]'
-add_equipment "testuser" "kettlebell"
-remove_equipment "testuser" "kettlebell"
-get_available_equipment "testuser"
+set_equipment_list "testuser1" '["dumbbell"]'
+add_equipment "testuser1" "kettlebell"
+remove_equipment "testuser1" "kettlebell"
+get_available_equipment "testuser1"
 
-find_exercise_by_available_equipment "testuser"
-find_exercise_by_equipment "testuser" '["dumbbell"]'
+find_exercise_by_available_equipment "testuser1"
+find_exercise_by_equipment "testuser1" '["dumbbell"]'
 
-create_log "testuser" "Bench Press" "arm" "2024-12-10"
-create_log "testuser" "Leg Press" "leg" "2024-12-11"
-get_all_logs "testuser"
-get_log_by_date "testuser" "2024-12-10"
-update_log "testuser" "Swim" "cardio" "2024-12-10"
-clear_logs "testuser"
+create_user "testuser2" "password123"
+login_user "testuser2" "password123"
+create_log "testuser2" "Bench Press" "arm" "2024-12-10"
+
+create_log "testuser1" "Bench Press" "arm" "2024-12-10"
+create_log "testuser1" "Leg Press" "leg" "2024-12-11"
+get_all_logs "testuser1"
+get_log_by_date "testuser1" "2024-12-10"
+update_log "testuser1" "Swim" "cardio" "2024-12-10"
+clear_logs "testuser1"
+
+get_all_logs "testuser2"
+delete_log_by_date "testuser2" "2024-12-10"
 
 echo "All smoketests passed successfully!"

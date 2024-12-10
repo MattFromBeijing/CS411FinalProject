@@ -459,6 +459,25 @@ def api_clear_logs():
     except Exception as e:
         app.logger.info(e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/delete-log-by-date', methods=['POST'])
+def api_delete_log_by_date():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        date = data.get('date')
+        
+        if not username or not date: return jsonify({"error": "username and date required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = delete_log_by_date(username, date)
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/get-all-logs', methods=['GET'])
 def api_get_all_logs():
