@@ -39,6 +39,7 @@ class RecommendationsModel:
         self.user_id: int = username
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
+        self.target_song: List[str] = []
         
 ######################################################
 #
@@ -195,6 +196,84 @@ class RecommendationsModel:
             List[str]: The list of equipment.
         """
         return self.equipment
+    
+######################################################
+#
+#    Target Group Management
+#
+######################################################
+
+    def set_target_songs(self, new_songs: List[str]) -> bool:
+        """
+        Sets the target songs for recommendations.
+
+        Args:
+            new_songs : List of song names to target.
+
+        Returns:
+            bool: True if the target songs are set successfully.
+
+        Raises:
+            ValueError: If the list is empty or contains invalid entries.
+        """
+        if len(new_songs) == 0 or "" in new_songs:
+            raise ValueError("Invalid songs list provided. Songs list must be non-empty.")
+             
+        self.target_songs = new_songs
+        return True
+
+    def add_target_song(self, new_song: str) -> bool:
+        """
+        Adds a new song to the target songs.
+
+        Args:
+            new_song : string of song name to add.
+
+        Returns:
+            bool: True if the song was added, False if it already exists.
+
+        Raises:
+            ValueError: If the provided song name is invalid.
+        """
+        if len(new_song) == 0:
+            raise ValueError("Invalid song name provided. Song name must be non-empty.")
+        
+        if new_song not in self.target_songs:
+            self.target_songs.append(new_song)
+            return True
+        else:
+            return False
+    
+    def remove_target_song(self, song: str) -> bool:
+        """
+        Removes a song from the target songs.
+
+        Args:
+            song: string of song name to remove.
+
+        Returns:
+            bool: True if the song was removed, False if it was not found.
+
+        Raises:
+            ValueError: If the provided song name is invalid.
+        """
+        if len(song) == 0:
+            raise ValueError("Invalid song name provided. Song name must be non-empty.")
+        
+        if song in self.target_songs:
+            self.target_songs.remove(song)
+            return True
+        else:
+            return False
+        
+    def get_target_songs(self) -> List[str]:
+        """
+        Retrieves the current list of target songs.
+
+        Returns:
+            List[str]: The list of target songs.
+        """
+        return self.target_songs
 
 ######################################################
 #
@@ -469,3 +548,4 @@ class RecommendationsModel:
         except requests.exceptions.RequestException as e:
             return f"An error occurred: {e}"
     
+
