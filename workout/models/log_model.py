@@ -93,7 +93,7 @@ def get_log_by_date(user_id: int, date: str) -> Log:
 def get_logs_by_muscle_group(user_id: int, muscle_groups: str) -> List[Log]:
     try:
         # Convert the input string to a list of integers
-        muscle_group_list = [group.strip() for group in muscle_groups.split(",") if group.strip().isdigit()]
+        muscle_group_list = [group.strip() for group in muscle_groups.split(",") if group.strip()]
         
         if not muscle_group_list:
             return []
