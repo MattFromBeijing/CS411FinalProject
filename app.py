@@ -730,6 +730,108 @@ def api_update_log():
 
 ##########################################################
 #
+# Playlist Management
+#
+##########################################################
+
+@app.route('/api/set-playlist', methods=['POST'])
+def api_set_playlist():
+    """
+    Route to set a playlist for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - playlist (list): A list of songs to be set as the user's playlist.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        playlist = data.get('playlist')
+        
+        if not username or not playlist: return jsonify({"error": "username and playlist required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.set_playlist(playlist)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/add-song-to-playlist', methods=['POST'])
+def api_add_song_to_playlist():
+    """
+    Route to add a song to a user's playlist.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - song (str): The song name to be added to the playlist.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        song = data.get('song')
+        
+        if not username or not song: return jsonify({"error": "username and song required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.add_song_to_playlist(song)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/remove-song-from-playlist', methods=['POST'])
+def api_remove_song_from_playlist():
+    """
+    Route to remove a song from a user's playlist.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - song (str): The song name to be removed from the playlist.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        song = data.get('song')
+        
+        if not username or not song: return jsonify({"error": "username and song required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.remove_song_from_playlist(song)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+
+##########################################################
+#
 # Song Management
 #
 ##########################################################
