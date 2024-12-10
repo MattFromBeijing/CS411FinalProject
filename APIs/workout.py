@@ -194,7 +194,6 @@ def update_one_exercise(recommendations,index,muscle):
             print(f"No exercises found targeting '{muscle_group}'.")
             return recommendations
 
-        # Replace the exercise at the specified index with the first fetched exercise
         if 0 <= index < len(recommendations):
             old_exercise = recommendations[index]
             new_exercise = fetched_exercises[0]  

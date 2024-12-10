@@ -1,14 +1,49 @@
 import requests
 
-url = "https://billboard-api2.p.rapidapi.com/radio-songs"
+BASE_URL = "https://api.jamendo.com/v3.0/tracks/"
+API_KEY = "141e0653" 
 
-querystring = {"date":"2024-06-01","range":"1-10"}
+def fetch_songs_based_on_workouts(workout_count):
+    """
+    Fetch songs from the Jamendo API based on the number of workouts.
 
-headers = {
-	"x-rapidapi-key": "350f1485e0mshd0619e3094dbc97p1093b6jsn85015ef157bc",
-	"x-rapidapi-host": "billboard-api2.p.rapidapi.com"
-}
+    Args:
+        workout_count : integer number of workouts completed by the user. It helps in determining the intensity.
 
-response = requests.get(url, headers=headers, params=querystring)
+    Returns:
+        songs : list of song names and their artists based on workout count.
+    """
+    params = {
+        "client_id": API_KEY,
+    }
 
-print(response.json())
+    duration_min = workout_count * 100
+    if(duration_min>500):
+        duration_min = 500
+    try:
+        response = requests.get(BASE_URL, params=params)
+        response.raise_for_status() 
+        data = response.json()
+        
+        if "results" in data:
+            songs = []
+            for song in data["results"]:
+                if song.get("duration", 0) >= duration_min:
+                    song_name = song.get("name", "Unknown")
+                    artist_name = song.get("artist_name", "Unknown")
+                    songs.append(f"{song_name} by {artist_name}")
+            
+            return songs
+        else:
+            return ["No songs found for the given criteria."]
+    
+    except requests.exceptions.RequestException as e:
+        return [f"An error occurred: {e}"]
+    
+
+if __name__ == "__main__":
+    workout_count = 2 # fixed number, in reality it should be the length of workouts
+    songs = fetch_songs_based_on_workouts(workout_count)
+    print("Recommended Songs:")
+    for song in songs:
+        print(song)
