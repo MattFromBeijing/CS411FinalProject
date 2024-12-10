@@ -199,7 +199,7 @@ class RecommendationsModel:
     
 ######################################################
 #
-#    Target Group Management
+#    Target Song Management
 #
 ######################################################
 
