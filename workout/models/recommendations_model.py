@@ -34,8 +34,26 @@ class RecommendationsModel:
         self.user_id: int = username
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
+        
+######################################################
+#
+#    Target Group Management
+#
+######################################################
 
-    def set_target_groups(self, new_groups: List[str]) -> bool:   
+    def set_target_groups(self, new_groups: List[str]) -> bool:
+        """
+        Sets the target muscle groups for exercise recommendations.
+
+        Args:
+            new_groups (List[str]): List of muscle groups to target.
+
+        Returns:
+            bool: True if the target groups are set successfully.
+
+        Raises:
+            ValueError: If the list is empty or contains invalid entries.
+        """
         if len(new_groups) == 0 or "" in new_groups:
             raise ValueError("Invalid muscle groups list provided. Muscle groups list must be non-empty.")
              
@@ -43,6 +61,18 @@ class RecommendationsModel:
         return True
 
     def add_target_group(self, new_group: str) -> bool:
+        """
+        Adds a new muscle group to the target groups.
+
+        Args:
+            new_group (str): Muscle group to add.
+
+        Returns:
+            bool: True if the muscle group was added, False if it already exists.
+
+        Raises:
+            ValueError: If the provided muscle group is invalid.
+        """
         if len(new_group) == 0:
             raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
         
@@ -53,6 +83,18 @@ class RecommendationsModel:
             return False
     
     def remove_target_group(self, group: str) -> bool:
+        """
+        Removes a muscle group from the target groups.
+
+        Args:
+            group (str): Muscle group to remove.
+
+        Returns:
+            bool: True if the muscle group was removed, False if it was not found.
+
+        Raises:
+            ValueError: If the provided muscle group is invalid.
+        """
         if len(group) == 0:
             raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
         
@@ -63,9 +105,33 @@ class RecommendationsModel:
             return False
         
     def get_target_groups(self) -> List[str]:
+        """
+        Retrieves the current list of target muscle groups.
+
+        Returns:
+            List[str]: The list of target muscle groups.
+        """
         return self.target_groups
 
+######################################################
+#
+#    Equipment management
+#
+######################################################
+
     def set_equipment(self, new_equipment: List[str]) -> bool:
+        """
+        Sets the equipment list for exercise recommendations.
+
+        Args:
+            new_equipment (List[str]): List of equipment to set.
+
+        Returns:
+            bool: True if the equipment list is set successfully.
+
+        Raises:
+            ValueError: If the list is empty or contains invalid entries.
+        """
         if len(new_equipment) == 0 or "" in new_equipment:
             raise ValueError("Invalid equipment list provided. Equipment list must be non-empty.")
         
@@ -73,6 +139,18 @@ class RecommendationsModel:
         return True
 
     def add_equipment(self, new_equipment: str) -> bool:
+        """
+        Adds a new equipment type to the equipment list.
+
+        Args:
+            new_equipment (str): Equipment type to add.
+
+        Returns:
+            bool: True if the equipment was added, False if it already exists.
+
+        Raises:
+            ValueError: If the provided equipment is invalid.
+        """
         if len(new_equipment) == 0:
             raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
         
@@ -83,6 +161,18 @@ class RecommendationsModel:
             return False
     
     def remove_equipment(self, equipment: str) -> bool:
+        """
+        Removes an equipment type from the equipment list.
+
+        Args:
+            equipment (str): Equipment type to remove.
+
+        Returns:
+            bool: True if the equipment was removed, False if it was not found.
+
+        Raises:
+            ValueError: If the provided equipment is invalid.
+        """
         if len(equipment) == 0:
             raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
         
@@ -93,14 +183,32 @@ class RecommendationsModel:
             return False
         
     def get_equipment(self) -> List[str]:
+        """
+        Retrieves the current list of equipment for exercise recommendations.
+
+        Returns:
+            List[str]: The list of equipment.
+        """
         return self.equipment
+
+######################################################
+#
+#    External API Calls (wger api)
+#
+######################################################
 
     def get_exercises_by_many_muscle_groups(self, muscle_groups: List[str]) -> List[Exercise]:
         """
-        Fetch exercises based on the user's target muscle groups. Recommend exercises based on time constraint and target muscle
+        Fetches exercises based on the user's target muscle groups.
 
-        Return:
-            recommendations: list of recommended exercises
+        Args:
+            muscle_groups (List[str]): List of target muscle groups.
+
+        Returns:
+            List[Exercise]: List of recommended exercises targeting the provided muscle groups.
+
+        Raises:
+            requests.RequestException: If there is an error with the API request.
         """
         params = {
             "language": 2,  # default Language: English
@@ -162,12 +270,18 @@ class RecommendationsModel:
             return [f"Error fetching exercises: {str(e)}"]
         
     def get_exercises_by_many_equipment(self, equipment_list: List[str]) -> List[Exercise]: 
-        '''
-        Fetch exercises based on the user's preferred equipements
+        """
+        Fetches exercises based on the user's preferred equipment.
 
-        Return:
-            recommendations: list of recommended exercises
-        '''
+        Args:
+            equipment_list (List[str]): List of equipment preferences.
+
+        Returns:
+            List[Exercise]: List of recommended exercises using the provided equipment.
+
+        Raises:
+            requests.RequestException: If there is an error with the API request.
+        """
         params = {
             "language": 2,  # default Language: English
             "api_key": self.api_key

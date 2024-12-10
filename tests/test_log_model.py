@@ -36,7 +36,7 @@ def mock_cursor(mocker):
 
 ######################################################
 #
-#    Creating logs
+#    Creating Logs
 #
 ######################################################
 
@@ -88,7 +88,7 @@ def test_create_log_duplicate(mock_cursor):
 
 ######################################################
 #
-#    Deleting logs
+#    Deleting Logs
 #
 ######################################################
 
@@ -150,7 +150,7 @@ def test_delete_log_by_date_no_logs_found(mock_cursor):
 
 ######################################################
 #
-#    Getting logs
+#    Getting Logs
 #
 ######################################################
 
@@ -287,7 +287,7 @@ def test_get_logs_by_muscle_group_no_logs_found(mock_cursor):
 
 ######################################################
 #
-#    Updating logs
+#    Updating Logs
 #
 ######################################################
 

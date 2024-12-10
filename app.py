@@ -165,6 +165,16 @@ def clear_users_route():
     
 @app.route('/api/set-target-groups', methods=['POST'])
 def api_set_target_groups():
+    """
+    Route to set target groups for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - groups (list): A list of groups to set as targets.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """    
     try:
         data = request.get_json()
         username = data.get('username')
@@ -187,6 +197,16 @@ def api_set_target_groups():
     
 @app.route('/api/add-target-group', methods=['POST'])
 def api_add_target_group():
+    """
+    Route to add one target group for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - group (str): The group to be added as a target.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -209,6 +229,16 @@ def api_add_target_group():
     
 @app.route('/api/remove-target-group', methods=['POST'])
 def api_remove_target_group():
+    """
+    Route to remove a target group for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - group (str): The group to be removed from the user's targets.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try: 
         data = request.get_json()
         username = data.get('username')
@@ -231,6 +261,15 @@ def api_remove_target_group():
     
 @app.route('/api/get-target-groups', methods=['GET'])
 def api_get_target_groups():
+    """
+    Route to retrieve target groups for a user.
+
+    Query Parameters:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response containing the status of the operation and a list of the user's target groups.
+    """
     try:
         username = request.args.get('username')
         
@@ -254,6 +293,16 @@ def api_get_target_groups():
 
 @app.route('/api/set-available-equipment-list', methods=['POST'])
 def api_set_available_equipment_list():
+    """
+    Route to set the available equipment list for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - equipment_list (list): A list of equipment to be set as available.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -276,6 +325,16 @@ def api_set_available_equipment_list():
     
 @app.route('/api/add-available-equipment', methods=['POST'])
 def api_add_available_equipment():
+    """
+    Route to add an item to the available equipment list for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - equipment (str): The equipment item to be added to the user's list.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -298,6 +357,16 @@ def api_add_available_equipment():
     
 @app.route('/api/remove-available-equipment', methods=['POST'])
 def api_remove_available_equipment():
+    """
+    Route to remove an item from the available equipment list for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - equipment (str): The equipment item to be removed from the user's list.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -320,6 +389,15 @@ def api_remove_available_equipment():
     
 @app.route('/api/get-available-equipment', methods=['GET'])
 def api_get_available_equipment():
+    """
+    Route to retrieve the available equipment list for a user.
+
+    Query Parameters:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response containing the status of the operation and the user's available equipment list.
+    """
     try:
         username = request.args.get('username')
         
@@ -343,6 +421,15 @@ def api_get_available_equipment():
 
 @app.route('/api/find-exercise_by-target_groups', methods=['GET'])
 def api_find_exercise_by_target_groups():
+    """
+    Route to find exercises based on a user's target muscle groups.
+
+    Query Parameters:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises matching the user's target groups.
+    """
     try:
         username = request.args.get('username')
         
@@ -361,6 +448,16 @@ def api_find_exercise_by_target_groups():
     
 @app.route('/api/find-exercise-by-groups', methods=['GET'])
 def api_find_exercise_by_groups():
+    """
+    Route to find exercises based on specified muscle groups.
+
+    Query Parameters:
+        - username (str): The username of the user.
+        - groups (list): A list of muscle groups to search for exercises.
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises matching the specified muscle groups.
+    """
     try:
         username = request.args.get('username')
         groups = request.args.getlist('groups')
@@ -379,6 +476,15 @@ def api_find_exercise_by_groups():
     
 @app.route('/api/find-exercise-by-available-equipment', methods=['GET'])
 def api_find_exercise_by_available_equipment():
+    """
+    Route to find exercises based on the user's available equipment.
+
+    Query Parameters:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises that can be performed with the available equipment.
+    """
     try:
         username = request.args.get('username')
 
@@ -397,6 +503,16 @@ def api_find_exercise_by_available_equipment():
     
 @app.route('/api/find-exercise-by-available-equipment', methods=['GET'])
 def api_find_exercise_by_equipment():
+    """
+    Route to find exercises based on specified equipment.
+
+    Query Parameters:
+        - username (str): The username of the user.
+        - equipment (list): A list of equipment items to search for exercises.
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises that can be performed with the specified equipment.
+    """
     try:
         data = request.get_json()
         username = data.request.args.get('username')
@@ -422,6 +538,18 @@ def api_find_exercise_by_equipment():
     
 @app.route('/api/create-log', methods=['POST'])
 def api_create_log():
+    """
+    Route to create an exercise log for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - exercise_name (str): The name of the exercise.
+        - muscle_groups (list): A list of muscle groups targeted by the exercise.
+        - date (str): The date of the exercise log (in a valid date format).
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -462,6 +590,15 @@ def api_clear_logs():
     
 @app.route('/api/delete-log-by-date', methods=['POST'])
 def api_delete_log_by_date():
+    """
+    Route to clear all exercise logs for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response indicating the success or failure of the operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -481,6 +618,15 @@ def api_delete_log_by_date():
 
 @app.route('/api/get-all-logs', methods=['GET'])
 def api_get_all_logs():
+    """
+    Route to retrieve all exercise logs for a user.
+
+    Query Parameters:
+        - username (str): The username of the user.
+
+    Returns:
+        JSON response containing the status of the operation and a list of all exercise logs for the user.
+    """
     try:
         username = request.args.get('username')
         
@@ -496,6 +642,16 @@ def api_get_all_logs():
     
 @app.route('/api/get-log-by-date', methods=['GET'])
 def api_get_log_by_date():
+    """
+    Route to retrieve exercise logs for a specific date for a user.
+
+    Query Parameters:
+        - username (str): The username of the user.
+        - date (str): The date of the logs to retrieve (in a valid date format).
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises logged for the specified date.
+    """
     try:
         username = request.args.get('username')
         date = request.args.get('date')
@@ -512,6 +668,16 @@ def api_get_log_by_date():
     
 @app.route('/api/get-log-by-muscle-group', methods=['GET'])
 def api_get_logs_by_muscle_group():
+    """
+    Route to retrieve exercise logs for a specific muscle group for a user.
+
+    Query Parameters:
+        - username (str): The username of the user.
+        - muscle_group (str): The muscle group for which to retrieve logs.
+
+    Returns:
+        JSON response containing the status of the operation and a list of exercises targeting the specified muscle group.
+    """
     try:
         username = request.args.get('username')
         muscle_group = request.args.get('muscle_group')
@@ -528,6 +694,18 @@ def api_get_logs_by_muscle_group():
     
 @app.route('/api/update-log', methods=['POST'])
 def api_update_log():
+    """
+    Route to update an exercise log for a user.
+
+    Expected JSON Input:
+        - username (str): The username of the user.
+        - exercise_name (str): The name of the exercise to be updated.
+        - muscle_groups (list): A list of muscle groups targeted by the exercise.
+        - date (str): The date of the log to be updated (in a valid date format).
+
+    Returns:
+        JSON response indicating the success or failure of the update operation.
+    """
     try:
         data = request.get_json()
         username = data.get('username')

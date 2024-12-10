@@ -48,11 +48,13 @@ def sample_equipment_list():
 ######################################################
 
 def test_set_target_groups(recommendations_model, sample_target_group_list):
+    """Test setting multiple target muscle groups at once."""
     result = recommendations_model.set_target_groups(sample_target_group_list)
     assert recommendations_model.target_groups == sample_target_group_list
     assert result == True
     
 def test_set_target_groups_invalid_groups(recommendations_model):
+    """Test setting invalid muscle groups."""
     with pytest.raises(ValueError, match="Invalid muscle groups list provided. Muscle groups list must be non-empty."):
         recommendations_model.set_target_groups([])
         
@@ -60,21 +62,25 @@ def test_set_target_groups_invalid_groups(recommendations_model):
         recommendations_model.set_target_groups([""])
     
 def test_add_target_group(recommendations_model, sample_target_group1):
+    """Test adding a single target muscle group."""
     result = recommendations_model.add_target_group(sample_target_group1)
     assert recommendations_model.target_groups == [sample_target_group1]
     assert result == True
     
 def test_add_target_group_duplicate(recommendations_model, sample_target_group1):
+    """Test adding a duplicate target muscle group."""
     recommendations_model.add_target_group(sample_target_group1)
     result = recommendations_model.add_target_group(sample_target_group1)
     assert recommendations_model.target_groups == [sample_target_group1]
     assert result == False
     
 def test_add_target_group_invalid_group(recommendations_model):
+    """Test adding an invalid target muscle group."""
     with pytest.raises(ValueError, match="Invalid muscle group name provided. Muscle group name must be non-empty."):
         recommendations_model.add_target_group("")
         
 def test_remove_target_group(recommendations_model, sample_target_group1, sample_target_group2):
+    """Test removing a target muscle group."""
     recommendations_model.add_target_group(sample_target_group1)
     recommendations_model.add_target_group(sample_target_group2)
     assert recommendations_model.target_groups == [sample_target_group1, sample_target_group2]
@@ -84,6 +90,7 @@ def test_remove_target_group(recommendations_model, sample_target_group1, sample
     assert result == True
     
 def test_remove_target_group_not_found(recommendations_model, sample_target_group1, sample_target_group2):
+    """Test removing a muscle group not in the target groups."""
     recommendations_model.add_target_group(sample_target_group1)
     assert recommendations_model.target_groups == [sample_target_group1]
     
@@ -91,11 +98,13 @@ def test_remove_target_group_not_found(recommendations_model, sample_target_grou
     assert recommendations_model.target_groups == [sample_target_group1]
     assert result == False
     
-def test_remove_target_group_invalid_groups(recommendations_model):    
+def test_remove_target_group_invalid_groups(recommendations_model):
+    """Test removing an invalid muscle group."""
     with pytest.raises(ValueError, match="Invalid muscle group name provided. Muscle group name must be non-empty."):
         recommendations_model.remove_target_group("")
         
 def test_get_target_groups(recommendations_model, sample_target_group1):
+    """Test retrieving the list of target muscle groups."""
     result = recommendations_model.get_target_groups()
     assert result == []
     
@@ -110,11 +119,13 @@ def test_get_target_groups(recommendations_model, sample_target_group1):
 ######################################################
 
 def test_set_equipment(recommendations_model, sample_equipment_list):
+    """Test setting multiple equipment types."""
     result = recommendations_model.set_equipment(sample_equipment_list)
     assert recommendations_model.equipment == sample_equipment_list
     assert result == True
 
 def test_set_equipment_list_invalid(recommendations_model):
+    """Test setting an invalid equipment list."""
     with pytest.raises(ValueError, match="Invalid equipment list provided. Equipment list must be non-empty."):
         recommendations_model.set_equipment([])
     
@@ -122,21 +133,25 @@ def test_set_equipment_list_invalid(recommendations_model):
         recommendations_model.set_equipment([""])
 
 def test_add_equipment(recommendations_model, sample_equipment1):
+    """Test adding a single equipment type."""
     result = recommendations_model.add_equipment(sample_equipment1)
     assert recommendations_model.equipment == [sample_equipment1]
     assert result == True
 
 def test_add_equipment_duplicate(recommendations_model, sample_equipment1):
+    """Test adding a duplicate equipment type."""
     recommendations_model.add_equipment(sample_equipment1)
     result = recommendations_model.add_equipment(sample_equipment1)
     assert recommendations_model.equipment == [sample_equipment1]
     assert result == False
 
 def test_add_equipment_invalid(recommendations_model):
+    """Test adding an invalid equipment type."""
     with pytest.raises(ValueError, match="Invalid equipment name provided. Equipment name must be non-empty."):
         recommendations_model.add_equipment("")
 
 def test_remove_equipment(recommendations_model, sample_equipment1, sample_equipment2):
+    """Test removing an equipment type."""
     recommendations_model.add_equipment(sample_equipment1)
     recommendations_model.add_equipment(sample_equipment2)
     assert recommendations_model.equipment == [sample_equipment1, sample_equipment2]
@@ -146,6 +161,7 @@ def test_remove_equipment(recommendations_model, sample_equipment1, sample_equip
     assert result == True
 
 def test_remove_equipment_not_found(recommendations_model, sample_equipment1, sample_equipment2):
+    """Test removing an equipment type not in the list."""
     recommendations_model.add_equipment(sample_equipment1)
     assert recommendations_model.equipment == [sample_equipment1]
     
@@ -154,10 +170,12 @@ def test_remove_equipment_not_found(recommendations_model, sample_equipment1, sa
     assert result == False
 
 def test_remove_equipment_invalid(recommendations_model):
+    """Test removing an invalid equipment type."""
     with pytest.raises(ValueError, match="Invalid equipment name provided. Equipment name must be non-empty."):
         recommendations_model.remove_equipment("")
         
 def test_get_equipment(recommendations_model, sample_equipment1):
+    """Test retrieving the list of equipment types."""
     result = recommendations_model.get_equipment()
     assert result == []
     
@@ -172,6 +190,7 @@ def test_get_equipment(recommendations_model, sample_equipment1):
 ######################################################
 
 def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, sample_target_group_list):
+    """Test fetching exercises based on multiple muscle groups."""
     mock_response = mocker.patch("requests.get")
     mock_response.return_value.status_code = 200
     mock_response.return_value.json.return_value = {
@@ -223,6 +242,7 @@ def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, samp
     assert result == expected_results
 
 def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_equipment_list):
+    """Test fetching exercises based on multiple equipment types."""
     mock_response = mocker.patch("requests.get")
     mock_response.return_value.status_code = 200
     mock_response.return_value.json.return_value = {
