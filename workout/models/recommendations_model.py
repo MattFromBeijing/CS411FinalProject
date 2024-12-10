@@ -396,75 +396,66 @@ class RecommendationsModel:
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
 
-    def update_one_exercise(self,recommendations,index,muscle):
+    def update_one_exercise(self, recommendations, index, muscle):
         """
-        Delete an exercise, add a new exercise, and updating the recommendations
+        Update an exercise in the recommendations list based on the specified index and muscle group.
 
-        Arg:
-            recommendations: list of the recommended exercises
-            index: index of the exercise that the user wants to update
-            muscle: string of which muscle group the user wants to target
+        Args:
+            recommendations: list of recommended exercises
+            index: index of the exercise to update
+            muscle: string of the muscle group to target
 
-        Return:
-            recommendations: the new updated list of recommended exercises
+        Returns:
+            recommendations: the updated list of exercises
         """
         params = {
-            "language": 2,  # default Language: English
-            "api_key": self.api_key  
+            "language": 2,  # Language set to English
+            "api_key": self.api_key
         }
 
         try:
             # Fetch exercises targeting the specified muscle group
             response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
             response.raise_for_status()
-            data = response.json().get("results", []) # getting data
+            data = response.json().get("results", [])
 
-            # Recommendation logic based on time and target muscle
             recommendations: List[Exercise] = []
-            
+
+            # Logic to find exercises based on muscle group
             for target in set(muscle):
-                for item in data:  
-                    if "exercises" in item:  
-                        for exercise in item["exercises"]:  
-                            if exercise.get("language") == 2: 
-                                if(target == 'leg') and (("squat" in exercise.get("name", "No name available").lower()) or ("running" in exercise.get("name", "No name available").lower())):
-                                    name = exercise.get("name", "No name available")
-                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                    today_date = date.today().strftime("%Y-%m-%d")
-                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date)) # storing data
-                                if(target == 'arm') and (("curl" in exercise.get("name", "No name available").lower()) or ("tricep" in exercise.get("name", "No name available").lower())):
-                                    name = exercise.get("name", "No name available")
-                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                    today_date = date.today().strftime("%Y-%m-%d")
-                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
-                                if(target == 'back') and (("pull" in exercise.get("name", "No name available").lower()) or ("row" in exercise.get("name", "No name available").lower())):
-                                    name = exercise.get("name", "No name available")
-                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                    today_date = date.today().strftime("%Y-%m-%d")
-                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
-                                if(target == 'abs') and (("crunch" in exercise.get("name", "No name available").lower()) or ("plank" in exercise.get("name", "No name available").lower())):
-                                    name = exercise.get("name", "No name available")
-                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                    today_date = date.today().strftime("%Y-%m-%d")
-                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
-                                if(target == 'cardio') and (("swim" in exercise.get("name", "No name available").lower()) or ("run" in exercise.get("name", "No name available").lower())):
-                                    name = exercise.get("name", "No name available")
-                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                    today_date = date.today().strftime("%Y-%m-%d")
-                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+                for item in data:
+                    if "exercises" in item:
+                        for exercise in item["exercises"]:
+                            if exercise.get("language") == 2:
+                                # Check conditions for different muscle groups and add to recommendations
+                                if (target == 'leg' and 
+                                    ("squat" in exercise.get("name", "").lower() or "running" in exercise.get("name", "").lower())):
+                                    recommendations.append(self.create_exercise(exercise, target))
+
+                                if (target == 'arm' and 
+                                    ("curl" in exercise.get("name", "").lower() or "tricep" in exercise.get("name", "").lower())):
+                                    recommendations.append(self.create_exercise(exercise, target))
+
+                                if (target == 'back' and 
+                                    ("pull" in exercise.get("name", "").lower() or "row" in exercise.get("name", "").lower())):
+                                    recommendations.append(self.create_exercise(exercise, target))
+
+                                if (target == 'abs' and 
+                                    ("crunch" in exercise.get("name", "").lower() or "plank" in exercise.get("name", "").lower())):
+                                    recommendations.append(self.create_exercise(exercise, target))
+
+                                if (target == 'cardio' and 
+                                    ("swim" in exercise.get("name", "").lower() or "run" in exercise.get("name", "").lower())):
+                                    recommendations.append(self.create_exercise(exercise, target))
 
             if not recommendations:
                 print(f"No exercises found targeting '{muscle}'.")
                 return recommendations
 
+            # Update the exercise at the specified index
             if 0 <= index < len(recommendations):
                 old_exercise = recommendations[index]
-                new_exercise = recommendations[0]  
+                new_exercise = recommendations[0]  # Can replace with any new exercise logic
                 recommendations[index] = new_exercise
                 print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
                 return recommendations
@@ -472,12 +463,12 @@ class RecommendationsModel:
                 print("Invalid index provided.")
                 return recommendations
 
+        except requests.RequestException as e:
+            print(f"Error fetching exercises: {str(e)}")
+            return [f"Error fetching exercises: {str(e)}"]
         except Exception as e:
             print(f"An error occurred while updating the exercise: {str(e)}")
             return recommendations
-
-        except requests.RequestException as e:
-            return [f"Error fetching exercises: {str(e)}"]
 
 ######################################################
 #
@@ -485,7 +476,7 @@ class RecommendationsModel:
 #
 ######################################################
             
-    def fetch_songs_based_on_workouts(workout_count):
+    def fetch_songs_based_on_workouts(self, workout_count):
         """
         Fetch songs from the Jamendo API based on the number of workouts.
 
@@ -500,11 +491,12 @@ class RecommendationsModel:
         }
 
         duration_min = workout_count * 100
-        if(duration_min>500):
+        if duration_min > 500:
             duration_min = 500
+    
         try:
             response = requests.get("https://api.jamendo.com/v3.0/tracks/", params=params)
-            response.raise_for_status() 
+            response.raise_for_status()
             data = response.json()
         
             if "results" in data:
@@ -514,14 +506,19 @@ class RecommendationsModel:
                         song_name = song.get("name", "Unknown")
                         artist_name = song.get("artist_name", "Unknown")
                         songs.append(f"{song_name} by {artist_name}")
+            
+                if not songs:
+                    return ["No songs found for the given criteria."]
                 return songs
             else:
                 return ["No songs found for the given criteria."]
     
         except requests.exceptions.RequestException as e:
             return [f"An error occurred: {e}"]
+
+
     
-    def fetch_random_song():
+    def fetch_random_song(self):
         """
         Fetch a random song from the Jamendo API.
 

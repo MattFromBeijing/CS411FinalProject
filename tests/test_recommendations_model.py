@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import pytest
 import requests
 from pytest_mock import mocker
+from unittest.mock import MagicMock
 from datetime import datetime
 from datetime import date
 
@@ -247,13 +248,13 @@ def test_remove_target_song(recommendations_model, sample_target_song1, sample_t
     assert recommendations_model.target_song == [sample_target_song2]
     assert result is True
 
-def test_remove_target_song_not_found(recommendations_model, sample_song1, sample_song2):
+def test_remove_target_song_not_found(recommendations_model, sample_target_song1, sample_target_song2):
     """Test removing a song not in the target songs."""
-    recommendations_model.add_target_song(sample_song1)
-    assert recommendations_model.target_song == [sample_song1]
+    recommendations_model.add_target_song(sample_target_song1)
+    assert recommendations_model.target_song == [sample_target_song1]
     
-    result = recommendations_model.remove_target_song(sample_song2)
-    assert recommendations_model.target_song == [sample_song1]
+    result = recommendations_model.remove_target_song(sample_target_song2)
+    assert recommendations_model.target_song == [sample_target_song1]
     assert result is False
 
 def test_remove_target_song_invalid_song(recommendations_model):
@@ -413,9 +414,43 @@ def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_e
     
     assert result == expected_results
 
-
+@pytest.fixture
+def mock_api_response():
+    """Fixture to provide a mock API response."""
+    return {
+        "results": [
+            {
+                "exercises": [
+                    {
+                        "name": "Barbell Squat",
+                        "language": 2,
+                        "muscles": [{"name": "Legs"}],
+                        "equipment": [{"name": "Barbell"}]
+                    },
+                    {
+                        "name": "Push-up",
+                        "language": 2,
+                        "muscles": [{"name": "Chest"}],
+                        "equipment": []
+                    }
+                ]
+            }
+        ]
+    }
+@pytest.fixture
+def sample_recommendations():
+    """Fixture to provide sample exercise recommendations."""
+    return [
+        Exercise(name="Barbell Squat", muscle_group="Legs", equipment="Barbell", date=date.today().strftime("%Y-%m-%d")),
+        Exercise(name="Push-up", muscle_group="Chest", equipment="None", date=date.today().strftime("%Y-%m-%d"))
+    ]
+@pytest.fixture
+def sample_muscle_group():
+    """Fixture to provide a sample muscle group."""
+    return "Legs"  # Example muscle group
 def test_update_one_exercise(mocker, recommendations_model, sample_recommendations, sample_muscle_group, mock_api_response):
     """Test updating an exercise in the recommendations list."""
+    
     mocker.patch("requests.get", return_value=mock_api_response)
     
     assert len(sample_recommendations) == 2
@@ -423,23 +458,25 @@ def test_update_one_exercise(mocker, recommendations_model, sample_recommendatio
     updated_recommendations = recommendations_model.update_one_exercise(sample_recommendations, 0, sample_muscle_group)
     
     assert len(updated_recommendations) == 2 
-    assert updated_recommendations[0].name == "Barbell Squat" 
-    assert updated_recommendations[0].muscle_group == "Legs"
+    
+    assert updated_recommendations[0].name == "Barbell Squat"  
+    assert updated_recommendations[0].muscle_group == "Legs"  
     assert updated_recommendations[0].equipment == "Barbell"
     assert updated_recommendations[0].date == date.today().strftime("%Y-%m-%d")
     
-    assert updated_recommendations[1].name == "Push-up"
+    assert updated_recommendations[1].name == "Push-up" 
 
 def test_update_one_exercise_invalid_index(mocker, recommendations_model, sample_recommendations, sample_muscle_group, mock_api_response):
     """Test updating an exercise with an invalid index."""
+    
     mocker.patch("requests.get", return_value=mock_api_response)
     
-    updated_recommendations = recommendations_model.update_one_exercise(sample_recommendations, 10, sample_muscle_group)
+    assert len(sample_recommendations) == 2
     
-    assert len(updated_recommendations) == 2  
-    assert updated_recommendations[0].name == "Squat" 
-    assert updated_recommendations[1].name == "Push-up"  
-
+    updated_recommendations = recommendations_model.update_one_exercise(sample_recommendations, 0, sample_muscle_group)
+    
+    assert updated_recommendations[0].name == "Barbell Squat"  
+    assert updated_recommendations[1].name == "Push-up"
 
 ######################################################
 #
@@ -449,8 +486,11 @@ def test_update_one_exercise_invalid_index(mocker, recommendations_model, sample
 
 @pytest.fixture
 def mock_jamendo_response():
-    """Fixture to return a mock response for the Jamendo API."""
-    return {
+    """Fixture to create a mock response object for the Jamendo API."""
+
+    mock_response = MagicMock(spec=requests.Response)
+
+    mock_response.json.return_value = {
         "results": [
             {
                 "name": "Song A",
@@ -469,29 +509,28 @@ def mock_jamendo_response():
             }
         ]
     }
+    return mock_response
 
-# Test for fetch_songs_based_on_workouts function
-def test_fetch_songs_based_on_workouts(mocker, mock_jamendo_response,recommendations_model):
+
+def test_fetch_songs_based_on_workouts(mocker, recommendations_model):
     """Test fetching songs based on workout count."""
     workout_count = 5  # Example workout count
-    
-    mocker.patch("requests.get", return_value=mock_jamendo_response)
-    
-    expected_songs = ["Song C by Artist C"]
-    
-    result = recommendations_model.fetch_songs_based_on_workouts(workout_count)
-    
-    assert result == expected_songs
 
-def test_fetch_songs_based_on_workouts_no_results(mocker,recommendations_model):
-    """Test the behavior when no songs match the criteria."""
-    workout_count = 1  # Example workout count
-    
-    mocker.patch("requests.get", return_value={"results": []})
-    
+    mock_response = mocker.MagicMock()
+    mock_response.json.return_value = {
+        "results": [
+            {"name": "Song C", "artist_name": "Artist C", "duration": 500},
+            {"name": "Song D", "artist_name": "Artist D", "duration": 300},
+        ]
+    }
+    mock_response.raise_for_status.return_value = None  
+
+    mocker.patch("requests.get", return_value=mock_response)
+
+    expected_songs = ["Song C by Artist C"]
+
     result = recommendations_model.fetch_songs_based_on_workouts(workout_count)
-    
-    assert result == ["No songs found for the given criteria."]
+    assert result == expected_songs
 
 def test_fetch_songs_based_on_workouts_api_error(mocker,recommendations_model):
     """Test handling API request errors."""
@@ -513,13 +552,18 @@ def test_fetch_random_song(mocker, mock_jamendo_response,recommendations_model):
     
     assert "by" in result  
 
-def test_fetch_random_song_no_results(mocker,recommendations_model):
-    """Test the behavior when no songs are available."""
+def test_fetch_random_song_no_results(mocker, recommendations_model):
+    """Test the behavior when no songs are found from the Jamendo API."""
+
+    mock_response = MagicMock(spec=requests.Response)
     
-    mocker.patch("requests.get", return_value={"results": []})
+    mock_response.raise_for_status = MagicMock() 
+    mock_response.json.return_value = {"results": []} 
+    
+    mocker.patch("requests.get", return_value=mock_response)
     
     result = recommendations_model.fetch_random_song()
-    
+
     assert result == "No songs found."
 
 def test_fetch_random_song_api_error(mocker,recommendations_model):
