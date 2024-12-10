@@ -237,6 +237,9 @@ if __name__ == "__main__":
                     print("\nInvalid selection. Please choose only from the following: leg, arm, back, abs, cardio")
 
             print("\nFetching exercise recommendations...")
+            
+            print(muscle_groups_list)
+            
             exercises = fetch_exercise_by_muscle_group(muscle_groups_list)
             print(f"\nRecommended Exercises Targeting: {', '.join(muscle_groups_list)}")
         
@@ -254,6 +257,9 @@ if __name__ == "__main__":
                     print("\nInvalid selection. Please choose only from the following: dumbbell, mat, bench, kettlebell, none")
 
             print("\nFetching exercise recommendations...")
+            
+            print(equipments_list)
+            
             exercises = fetch_exercises_by_equipments(equipments_list)
             print(f"\nRecommended Exercises Using: {', '.join(equipments_list)}")
 

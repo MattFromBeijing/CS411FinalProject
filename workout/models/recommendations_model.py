@@ -36,7 +36,7 @@ class RecommendationsModel:
         self.equipment: List[str] = []
 
     def set_target_groups(self, new_groups: List[str]) -> bool:   
-        if len(new_groups) == 0 and "" not in new_groups:
+        if len(new_groups) == 0 or "" in new_groups:
             raise ValueError("Invalid muscle groups list provided. Muscle groups list must be non-empty.")
              
         self.target_groups = new_groups
@@ -63,7 +63,7 @@ class RecommendationsModel:
             return False
 
     def set_equipment(self, new_equipment: List[str]) -> bool:
-        if len(new_equipment) == 0 and new_equipment not in self.equipment:
+        if len(new_equipment) == 0 or "" in new_equipment:
             raise ValueError("Invalid equipment list provided. Equipment list must be non-empty.")
         
         self.equipment = new_equipment
@@ -88,66 +88,8 @@ class RecommendationsModel:
             return True
         else:
             return False
-    
-    def get_exercises_by_one_muscle_group(self, muscle_group: str) -> List[Exercise]:
-        """
-        Fetch exercises based on the user's target muscle group. Recommend exercises based on time constraint and target muscle.
 
-        Args:
-            muscle_group (str): The target muscle group for exercise recommendations.
-
-        Return:
-            recommendations: list of recommended exercises
-        """
-        if len(muscle_group) == 0:
-            raise ValueError("Invalid muscle group name provided. Muscle group name must be non-empty.")
-        
-        params = {
-            "language": 2,  # default Language: English
-            "api_key": self.api_key
-        }
-
-        try:
-            params = {
-            "language": 2,  # default Language: English
-            "api_key": self.api_key
-            }
-
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
-            response.raise_for_status()
-            data = response.json().get("results", [])  # getting data
-
-            # Recommendation logic based on time and target muscle
-            recommendations = []
-
-            for item in data:
-                if "exercises" in item:
-                    for exercise in item["exercises"]:
-                        if exercise.get("language") == 2:
-                            name = exercise.get("name", "No name available").lower()
-
-                            if (
-                                (muscle_group == 'leg' and ("squat" in name or "running" in name)) or
-                                (muscle_group == 'arm' and ("curl" in name or "tricep" in name)) or
-                                (muscle_group == 'back' and ("pull" in name or "row" in name)) or
-                                (muscle_group == 'abs' and ("crunch" in name or "plank" in name)) or
-                                (muscle_group == 'cardio' and ("swim" in name or "run" in name))
-                            ):
-                                muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                                equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                                today_date = date.today().strftime("%Y-%m-%d")
-                                recommendations.append(
-                                    Exercise(name=exercise.get("name", "No name available"),
-                                            muscle_group=muscles,
-                                            equipment=equipment,
-                                            date=today_date)
-                                )
-
-            return recommendations
-        except requests.RequestException as e:
-            return [f"Error fetching exercises: {str(e)}"]
-
-    def get_exercises_by_muscle_groups(self) -> List[Exercise]:
+    def get_exercises_by_many_muscle_groups(self) -> List[Exercise]:
         """
         Fetch exercises based on the user's target muscle groups. Recommend exercises based on time constraint and target muscle
 
@@ -168,7 +110,7 @@ class RecommendationsModel:
             # Recommendation logic based on time and target muscle
             recommendations: List[Exercise] = []
             
-            for target in self.target_groups:
+            for target in set(self.target_groups):
                 for item in data:  
                     if "exercises" in item:  
                         for exercise in item["exercises"]:  
@@ -212,56 +154,6 @@ class RecommendationsModel:
             return recommendations
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
-
-    def get_exercises_by_one_equipment(self, equipment: str) -> List[Exercise]:
-        '''
-        Fetch exercises based on the user's preferred equipment.
-
-        Args:
-            equipment (str): The preferred equipment for exercise recommendations. Use 'none' for exercises requiring no equipment.
-
-        Return:
-            recommendations: list of recommended exercises
-        '''
-        if len(equipment) == 0:
-            raise ValueError("Invalid equipment name provided. Equipment name must be non-empty.")
-        
-        params = {
-            "language": 2,  # default Language: English
-            "api_key": self.api_key
-        }
-
-        try:
-            # response = requests.get(f"{BASE_URL}exercise/", params=params)
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
-            response.raise_for_status()
-            data = response.json().get("results", [])  # getting data
-
-            # Recommendation logic
-            recommendations: List[Exercise] = []
-
-            for item in data:
-                if "exercises" in item:
-                    for exercise in item["exercises"]:
-                        if exercise.get("language") == 2:
-                            exercise_name = exercise.get("name", "No name available")
-                            muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
-                            available_equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
-                            today_date = date.today().strftime("%Y-%m-%d")
-
-                            # Matching logic
-                            if available_equipment.lower() == equipment.lower():
-                                recommendations.append(
-                                    Exercise(name=exercise_name, muscle_group=muscles, equipment=available_equipment, date=today_date)
-                                )
-                            if equipment.lower() == 'none' and available_equipment == "No equipment required":
-                                recommendations.append(
-                                    Exercise(name=exercise_name, muscle_group=muscles, equipment=available_equipment, date=today_date)
-                                )
-
-            return recommendations
-        except requests.RequestException as e:
-            return [f"Error fetching exercises: {str(e)}"]
         
     def get_exercises_by_many_equipment(self) -> List[Exercise]: 
         '''
@@ -283,7 +175,7 @@ class RecommendationsModel:
             # Recommendation logic based on time and target muscle
             recommendations: List[Exercise] = []
             
-            for target in self.equipment:
+            for target in set(self.equipment):
                 for item in data:  
                     if "exercises" in item:  
                         for exercise in item["exercises"]:  
