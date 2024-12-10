@@ -1,4 +1,5 @@
 import requests
+import random
 
 BASE_URL = "https://api.jamendo.com/v3.0/tracks/"
 API_KEY = "141e0653" 
@@ -40,10 +41,38 @@ def fetch_songs_based_on_workouts(workout_count):
     except requests.exceptions.RequestException as e:
         return [f"An error occurred: {e}"]
     
+def fetch_random_song():
+    """
+    Fetch a random song from the Jamendo API.
+
+    Returns:
+        str: A random song name and its artist.
+    """
+    params = {
+        "client_id": API_KEY,
+    }
+
+    try:
+        response = requests.get(BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        if "results" in data and len(data["results"]) > 0:
+            song = random.choice(data["results"])
+            song_name = song.get("name", "Unknown")
+            artist_name = song.get("artist_name", "Unknown")
+            return f"{song_name} by {artist_name}"
+        else:
+            return "No songs found."
+    
+    except requests.exceptions.RequestException as e:
+        return f"An error occurred: {e}"
 
 if __name__ == "__main__":
     workout_count = 2 # fixed number, in reality it should be the length of workouts
     songs = fetch_songs_based_on_workouts(workout_count)
+    songs = fetch_random_song()
     print("Recommended Songs:")
-    for song in songs:
-        print(song)
+    #for song in songs:
+        #print(song)
+    print(songs)
