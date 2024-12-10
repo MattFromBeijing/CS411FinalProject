@@ -267,11 +267,12 @@ if __name__ == "__main__":
 
                 try:
                     # Get user input for updating an exercise
-                    exercise_to_update = input("\nEnter the index of the exercise you want to replace: ").strip()
+                    exercise_to_update = input("\nEnter the index of the exercise you want to replace: ").strip() # returns an integer
                     muscle_group = input("Enter the muscle group you'd like the new exercise to target: ").strip().lower()
 
-                    if int(exercise_to_update) < len(exercises):
-                        updated_recommendations = update_one_exercise(exercises, exercise_to_update, muscle_group)
+                    index = int(exercise_to_update) - 1
+                    if index < len(exercises):
+                        updated_recommendations = update_one_exercise(exercises, index, muscle_group)
                         print("\nUpdated Exercise Recommendations:")
                         for exercise in updated_recommendations:
                             print(f"- {exercise}")
