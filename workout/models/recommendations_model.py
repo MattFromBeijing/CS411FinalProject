@@ -336,15 +336,56 @@ class RecommendationsModel:
 
         try:
             # Fetch exercises targeting the specified muscle group
-            fetched_exercises = fetch_exercise_by_many_muscle_group([muscle.lower()])
+            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
+            response.raise_for_status()
+            data = response.json().get("results", []) # getting data
 
-            if not fetched_exercises:
+            # Recommendation logic based on time and target muscle
+            recommendations: List[Exercise] = []
+            
+            for target in set(muscle):
+                for item in data:  
+                    if "exercises" in item:  
+                        for exercise in item["exercises"]:  
+                            if exercise.get("language") == 2: 
+                                if(target == 'leg') and (("squat" in exercise.get("name", "No name available").lower()) or ("running" in exercise.get("name", "No name available").lower())):
+                                    name = exercise.get("name", "No name available")
+                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                                    today_date = date.today().strftime("%Y-%m-%d")
+                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date)) # storing data
+                                if(target == 'arm') and (("curl" in exercise.get("name", "No name available").lower()) or ("tricep" in exercise.get("name", "No name available").lower())):
+                                    name = exercise.get("name", "No name available")
+                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                                    today_date = date.today().strftime("%Y-%m-%d")
+                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+                                if(target == 'back') and (("pull" in exercise.get("name", "No name available").lower()) or ("row" in exercise.get("name", "No name available").lower())):
+                                    name = exercise.get("name", "No name available")
+                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                                    today_date = date.today().strftime("%Y-%m-%d")
+                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+                                if(target == 'abs') and (("crunch" in exercise.get("name", "No name available").lower()) or ("plank" in exercise.get("name", "No name available").lower())):
+                                    name = exercise.get("name", "No name available")
+                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                                    today_date = date.today().strftime("%Y-%m-%d")
+                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+                                if(target == 'cardio') and (("swim" in exercise.get("name", "No name available").lower()) or ("run" in exercise.get("name", "No name available").lower())):
+                                    name = exercise.get("name", "No name available")
+                                    muscles = ", ".join([muscle["name"] for muscle in item.get("muscles", [])]) or "No muscles targeted"
+                                    equipment = ", ".join([eq["name"] for eq in item.get("equipment", [])]) or "No equipment required"
+                                    today_date = date.today().strftime("%Y-%m-%d")
+                                    recommendations.append(Exercise(name=name, muscle_group=muscles, equipment=equipment, date = today_date))
+
+            if not recommendations:
                 print(f"No exercises found targeting '{muscle}'.")
                 return recommendations
 
             if 0 <= index < len(recommendations):
                 old_exercise = recommendations[index]
-                new_exercise = fetched_exercises[0]  
+                new_exercise = recommendations[0]  
                 recommendations[index] = new_exercise
                 print(f"Replaced '{old_exercise.name}' with '{new_exercise.name}'.")
                 return recommendations
