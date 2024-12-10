@@ -15,12 +15,12 @@ configure_logger(logger)
 @dataclass
 class Log:
     id: int
-    user_id: int
+    username: str
     exercise_name: str
     muscle_groups: str
     date: str
 
-def create_log(user_id: int, exercise_name: str, muscle_groups: str, date: str) -> bool:
+def create_log(username: str, exercise_name: str, muscle_groups: str, date: str) -> bool:
     if len(exercise_name) == 0:
         raise ValueError("Invalid exercise name provided. exercise_name must be an string with length greater than 0.")
 
@@ -33,32 +33,32 @@ def create_log(user_id: int, exercise_name: str, muscle_groups: str, date: str) 
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO logs (user_id, exercise_name, muscle_groups, date) VALUES (?, ?, ?, ?)", 
-                (user_id, exercise_name, muscle_groups, date)
+                "INSERT INTO logs (username, exercise_name, muscle_groups, date) VALUES (?, ?, ?, ?)", 
+                (username, exercise_name, muscle_groups, date)
             )
             conn.commit()
         return True
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-def clear_logs(user_id: int) -> bool:
+def clear_logs(username: str) -> bool:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM logs WHERE user_id = ?", (user_id))
+            cursor.execute("DELETE FROM logs WHERE username = ?", (username))
             conn.commit()
 
             if cursor.rowcount == 0:
-                raise ValueError(f"No logs found for user_id={user_id}")
+                raise ValueError(f"No logs found for username={username}")
         return True
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-def get_all_logs(user_id: int) -> List[Log]:
+def get_all_logs(username: str) -> List[Log]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM logs WHERE user_id = ?", (user_id,))
+            cursor.execute("SELECT * FROM logs WHERE username = ?", (username,))
             rows = cursor.fetchall()
         if rows:
             logs = [Log(row[0], row[1], row[2], row[3], row[4]) for row in rows]
@@ -68,7 +68,7 @@ def get_all_logs(user_id: int) -> List[Log]:
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-def get_log_by_date(user_id: int, date: str) -> Log:
+def get_log_by_date(username: str, date: str) -> Log:
     try:
         date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError as e:
@@ -78,8 +78,8 @@ def get_log_by_date(user_id: int, date: str) -> Log:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM logs WHERE user_id = ? AND date = ?",
-                (user_id, date)
+                "SELECT * FROM logs WHERE username = ? AND date = ?",
+                (username, date)
             )
             row = cursor.fetchone()
             
@@ -90,7 +90,7 @@ def get_log_by_date(user_id: int, date: str) -> Log:
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-def get_logs_by_muscle_group(user_id: int, muscle_groups: str) -> List[Log]:
+def get_logs_by_muscle_group(username: str, muscle_groups: str) -> List[Log]:
     try:
         # Convert the input string to a list of integers
         muscle_group_list = [group.strip() for group in muscle_groups.split(",") if group.strip()]
@@ -100,10 +100,10 @@ def get_logs_by_muscle_group(user_id: int, muscle_groups: str) -> List[Log]:
         
         # Build the dynamic WHERE clause for `LIKE` matching
         like_clauses = " OR ".join(["muscle_groups LIKE ?"] * len(muscle_group_list))
-        query = f"SELECT * FROM logs WHERE user_id = ? AND ({like_clauses})"
+        query = f"SELECT * FROM logs WHERE username = ? AND ({like_clauses})"
         
-        # Prepare parameters: user_id + %group% for each muscle group
-        parameters = [user_id] + [f"%{group}%" for group in muscle_group_list]
+        # Prepare parameters: username + %group% for each muscle group
+        parameters = [username] + [f"%{group}%" for group in muscle_group_list]
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -120,7 +120,7 @@ def get_logs_by_muscle_group(user_id: int, muscle_groups: str) -> List[Log]:
         raise sqlite3.Error(f"Database error: {str(e)}")
 
 
-def update_log(user_id: int, date: str, exercise_name: str, muscle_groups: str) -> bool:
+def update_log(username: str, date: str, exercise_name: str, muscle_groups: str) -> bool:
     try:
         date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError as e:
@@ -130,13 +130,13 @@ def update_log(user_id: int, date: str, exercise_name: str, muscle_groups: str) 
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE logs SET exercise_name = ?, muscle_groups = ? WHERE user_id = ? AND date = ?",
-                (exercise_name, muscle_groups, user_id, date)
+                "UPDATE logs SET exercise_name = ?, muscle_groups = ? WHERE username = ? AND date = ?",
+                (exercise_name, muscle_groups, username, date)
             )
             conn.commit()
 
             if cursor.rowcount == 0:
-                raise ValueError(f"No log found for user_id={user_id} and date={date}")
+                raise ValueError(f"No log found for username={username} and date={date}")
         return True
     except sqlite3.Error as e:
         raise sqlite3.Error(f"Database error: {str(e)}")

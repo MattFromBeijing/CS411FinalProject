@@ -28,10 +28,10 @@ class RecommendationsModel:
         api_key (str): api key for api calls
     """
 
-    def __init__(self, user_id, API_KEY):
+    def __init__(self, username):
         self.base_url: str = "https://wger.de/api/v2/exercisebaseinfo/"
-        self.api_key: str = API_KEY
-        self.user_id: int = user_id
+        self.api_key: str = "5bf4f0a02bedae58dbbbbf318be604eb4d0f88c5"
+        self.user_id: int = username
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
 
@@ -61,6 +61,9 @@ class RecommendationsModel:
             return True
         else:
             return False
+        
+    def get_target_groups(self) -> List[str]:
+        return self.target_groups
 
     def set_equipment(self, new_equipment: List[str]) -> bool:
         if len(new_equipment) == 0 or "" in new_equipment:
@@ -88,8 +91,11 @@ class RecommendationsModel:
             return True
         else:
             return False
+        
+    def get_equipment(self) -> List[str]:
+        return self.equipment
 
-    def get_exercises_by_many_muscle_groups(self) -> List[Exercise]:
+    def get_exercises_by_many_muscle_groups(self, muscle_groups: List[str]) -> List[Exercise]:
         """
         Fetch exercises based on the user's target muscle groups. Recommend exercises based on time constraint and target muscle
 
@@ -110,7 +116,7 @@ class RecommendationsModel:
             # Recommendation logic based on time and target muscle
             recommendations: List[Exercise] = []
             
-            for target in set(self.target_groups):
+            for target in set(muscle_groups):
                 for item in data:  
                     if "exercises" in item:  
                         for exercise in item["exercises"]:  
@@ -155,7 +161,7 @@ class RecommendationsModel:
         except requests.RequestException as e:
             return [f"Error fetching exercises: {str(e)}"]
         
-    def get_exercises_by_many_equipment(self) -> List[Exercise]: 
+    def get_exercises_by_many_equipment(self, equipment_list: List[str]) -> List[Exercise]: 
         '''
         Fetch exercises based on the user's preferred equipements
 
@@ -175,7 +181,7 @@ class RecommendationsModel:
             # Recommendation logic based on time and target muscle
             recommendations: List[Exercise] = []
             
-            for target in set(self.equipment):
+            for target in set(equipment_list):
                 for item in data:  
                     if "exercises" in item:  
                         for exercise in item["exercises"]:  

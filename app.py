@@ -1,14 +1,24 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from config import ProductionConfig, TestConfig
-from workout.models.user_model import create_user, login, update_password, clear_users, get_id_by_username
 from werkzeug.exceptions import BadRequest, Unauthorized
+
+from typing import Dict
+from workout.utils.logger import configure_logger
+
+logger = logging.getLogger(__name__)
+configure_logger(logger)
+
+from workout.models.user_model import create_user, login, update_password, clear_users, get_id_by_username
+from workout.models.recommendations_model import RecommendationsModel, Exercise
+from workout.models.log_model import *
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
+accounts: Dict[str, RecommendationsModel] = {}
 
 ####################################################
 #
@@ -55,7 +65,9 @@ def create_account() -> Response:
             raise BadRequest("Both 'username' and 'password' are required.")
 
         create_user(username, password)
+        accounts[username] = RecommendationsModel(username)
         app.logger.info("User added: %s", username)
+        
         return make_response(jsonify({'status': 'user added', 'username': username}), 201)
     except ValueError as e:
         return make_response(jsonify({'error': str(e)}), 400)
@@ -142,6 +154,348 @@ def clear_users_route():
     except Exception as e:
         app.logger.error("Error clearing users: %s", str(e))
         return jsonify({"error": "An unexpected error occurred while clearing users."}), 500
+    
+##########################################################
+#
+# Target Management
+#
+##########################################################
+    
+@app.route('/api/set-target-groups', methods=['POST'])
+def api_set_target_groups():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        groups = data.get('groups')
+        
+        if not username or not groups: return jsonify({"error": "username and groups required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}, 404)
+        
+        model = accounts[username]
+        result = model.set_target_groups(groups)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return make_response(jsonify({"error": str(e)}), 500)
+    
+@app.route('/api/add-target-group', methods=['POST'])
+def api_add_target_group():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        group = data.get('group')
+        
+        if not username or not group: return jsonify({"error": "username and group required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.add_target_group(group)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/remove-target-group', methods=['POST'])
+def api_remove_target_group():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        group = data.get('group')
+        
+        if not username or not group: return jsonify({"error": "username and group required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.remove_target_group(group)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+##########################################################
+#
+# Equipment Management
+#
+##########################################################
+
+@app.route('/api/set-available-equipment-list', methods=['POST'])
+def api_set_available_equipment_list():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        equipment_list = data.get('equipment_list')
+        
+        if not username or not equipment_list: return jsonify({"error": "username and equipment_list required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.set_equipment(equipment_list)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/add-available-equipment', methods=['POST'])
+def api_add_available_equipment():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        equipment = data.get('equipment')
+        
+        if not username or not equipment: return jsonify({"error": "username and equipment required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.add_equipment(equipment)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/remove-available-equipment', methods=['POST'])
+def api_remove_available_equipment():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        equipment = data.get('equipment')
+        
+        if not username or not equipment: return jsonify({"error": "username and equipment required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        result = model.remove_equipment(equipment)
+        
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+##########################################################
+#
+# Finding Exercises (external API calls)
+#
+##########################################################
+
+@app.route('/api/find-exercise_by-target_groups', methods=['GET'])
+def api_find_exercise_by_target_groups():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        target_groups = model.get_target_groups()
+        exercises = model.get_exercises_by_many_muscle_groups(target_groups)
+        
+        return jsonify({"status": "success", "exercises": exercises}), 200
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/find-exercise-by-groups', methods=['GET'])
+def api_find_exercise_by_groups():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        groups = data.request.args.getlist('groups')
+
+        if not username or not groups: return jsonify({"error": "username and groups required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        exercises = model.get_exercises_by_many_muscle_groups(groups)
+        
+        return jsonify({"status": "success", "exercises": exercises}), 200
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/find-exercise-by-available-equipment', methods=['GET'])
+def api_find_exercise_by_available_equipment():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        available_equipment = model.get_equipment()
+        exercises = model.get_exercises_by_many_equipment(available_equipment)
+        
+        return jsonify({"status": "success", "exercises": exercises}), 200
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/find-exercise-by-available-equipment', methods=['GET'])
+def api_find_exercise_by_equipment():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        equipment = data.request.args.getlist('equipment')
+
+        if not username or not equipment: return jsonify({"error": "username and equipment required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        exercises = model.get_exercises_by_many_equipment(equipment)
+        
+        return jsonify({"status": "success", "exercises": exercises}), 200
+
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+##########################################################
+#
+# Log Management
+#
+##########################################################
+    
+@app.route('/api/create-log', methods=['POST'])
+def api_create_log():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        exercise_name = data.get('exercise_name')
+        muscle_groups = data.get('muscle_groups')
+        date = data.get('date')
+        
+        if not (username and exercise_name and muscle_groups and date): return jsonify({"error": "username, exercise_name, muscle_groups, and date required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = create_log(username, exercise_name, muscle_groups, date)
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+        
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/clear-logs', methods=['GET'])
+def api_clear_logs():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = clear_logs(username)
+        
+        return jsonify({"status": "success", "exercises": result}), 200
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/get-all-logs', methods=['GET'])
+def api_get_all_logs():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = get_all_logs(username)
+        
+        return jsonify({"status": "success", "exercises": result}), 200
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/get-log-by-date', methods=['GET'])
+def api_get_log_by_date():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        date = data.request.args.get('date')
+        
+        if not username or not date: return jsonify({"error": "username and date required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = get_log_by_date(username, date)
+        
+        return jsonify({"status": "success", "exercises": result}), 200
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/get-log-by-muscle-group', methods=['GET'])
+def api_get_logs_by_muscle_group():
+    try:
+        data = request.get_json()
+        username = data.request.args.get('username')
+        muscle_group = data.request.args.get('muscle_group')
+        
+        if not username or not muscle_group: return jsonify({"error": "username and muscle_group required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = get_logs_by_muscle_group(username, muscle_group)
+        
+        return jsonify({"status": "success", "exercises": result}), 200
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/update-log', methods=['POST'])
+def api_update_log():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        exercise_name = data.get('exercise_name')
+        muscle_groups = data.get('muscle_groups')
+        date = data.get('date')
+        
+        if not (username and exercise_name and muscle_groups and date): return jsonify({"error": "username, exercise_name, muscle_groups, and date required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        result = update_log(username, date, exercise_name, muscle_groups)
+        if result:
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error"}), 500
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

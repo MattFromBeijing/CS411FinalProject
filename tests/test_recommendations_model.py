@@ -7,12 +7,14 @@ from workout.models.recommendations_model import (
 )
 
 ######################################################
+#
 #    Fixtures
+#
 ######################################################
 
 @pytest.fixture()
 def recommendations_model():
-    return RecommendationsModel(1, "5bf4f0a02bedae58dbbbbf318be604eb4d0f88c5")
+    return RecommendationsModel("Matthew")
 
 @pytest.fixture
 def sample_target_group1():
@@ -39,7 +41,9 @@ def sample_equipment_list():
     return ["dumbbell", "kettlebell"]
 
 ######################################################
+#
 #    Target group managment
+#
 ######################################################
 
 def test_set_target_groups(recommendations_model, sample_target_group_list):
@@ -90,8 +94,18 @@ def test_remove_target_group_invalid_groups(recommendations_model):
     with pytest.raises(ValueError, match="Invalid muscle group name provided. Muscle group name must be non-empty."):
         recommendations_model.remove_target_group("")
         
+def test_get_target_groups(recommendations_model, sample_target_group1):
+    result = recommendations_model.get_target_groups()
+    assert result == []
+    
+    recommendations_model.add_target_group(sample_target_group1)
+    result = recommendations_model.get_target_groups()
+    assert result == [sample_target_group1]
+        
 ######################################################
+#
 #    Equipment management
+#
 ######################################################
 
 def test_set_equipment(recommendations_model, sample_equipment_list):
@@ -142,11 +156,21 @@ def test_remove_equipment_invalid(recommendations_model):
     with pytest.raises(ValueError, match="Invalid equipment name provided. Equipment name must be non-empty."):
         recommendations_model.remove_equipment("")
         
+def test_get_equipment(recommendations_model, sample_equipment1):
+    result = recommendations_model.get_equipment()
+    assert result == []
+    
+    recommendations_model.add_equipment(sample_equipment1)
+    result = recommendations_model.get_equipment()
+    assert result == [sample_equipment1]
+        
 ######################################################
+#
 #    API calls
+#
 ######################################################
 
-def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, sample_target_group1):
+def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, sample_target_group_list):
     mock_response = mocker.patch("requests.get")
     mock_response.return_value.status_code = 200
     mock_response.return_value.json.return_value = {
@@ -190,13 +214,12 @@ def test_get_exercises_by_many_muscle_groups(mocker, recommendations_model, samp
         ]
     }
     
-    recommendations_model.add_target_group(sample_target_group1)
-    result = recommendations_model.get_exercises_by_many_muscle_groups()
+    result = recommendations_model.get_exercises_by_many_muscle_groups(sample_target_group_list)
     expected_results = [Exercise(name='Barbell Squat', muscle_group='No muscles targeted', equipment='No equipment required', date='2024-12-10')]
 
     assert result == expected_results
 
-def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_equipment1):
+def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_equipment_list):
     mock_response = mocker.patch("requests.get")
     mock_response.return_value.status_code = 200
     mock_response.return_value.json.return_value = {
@@ -272,7 +295,6 @@ def test_get_exercises_by_many_equipment(mocker, recommendations_model, sample_e
             }
         ]
     }
-    recommendations_model.add_equipment(sample_equipment1)
-    result = recommendations_model.get_exercises_by_many_equipment()
+    result = recommendations_model.get_exercises_by_many_equipment(sample_equipment_list)
     expected_results = [Exercise(name='Axe Hold', muscle_group='No muscles targeted', equipment='Dumbbell', date='2024-12-10')]
     assert result == expected_results
