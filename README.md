@@ -275,3 +275,127 @@ Code: 200
 Content:
 
 { "status": "success", "groups": ["<group1>", "<group2>"] }
+
+## Equiptment Management
+
+### Set Available Equipment
+
+Route: /set-available-equipment-list
+
+Request Type: POST
+
+Purpose: Sets the available equipment list for a user.
+
+Request Body:
+
+{
+  "username": "<username>",
+  "equipment_list": ["<equipment1>", "<equipment2>"]
+}
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success" }
+
+### Get Available Equipment
+
+Route: /get-available-equipment
+
+Request Type: GET
+
+Purpose: Retrieves the available equipment list for a user.
+
+Query Parameters:
+
+username: The username of the user.
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success", "equipment": ["<equipment1>", "<equipment2>"] }
+
+## Exercise Search
+
+### Find Exercises by Target Groups
+
+Route: /find-exercise-by-target-groups
+
+Request Type: GET
+
+Purpose: Finds exercises based on a user's target groups.
+
+Query Parameters:
+
+username: The username of the user.
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success", "exercises": ["<exercise1>", "<exercise2>"] }
+
+## Logs Management
+
+### Create Log
+
+Route: /create-log
+
+Request Type: POST
+
+Purpose: Creates an exercise log for a user.
+
+Request Body:
+
+{
+  "username": "<username>",
+  "exercise_name": "<exercise_name>",
+  "muscle_groups": ["<group1>", "<group2>"],
+  "date": "<YYYY-MM-DD>"
+}
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success" }
+
+### Get All Logs
+
+Route: /get-all-logs
+
+Request Type: GET
+
+Purpose: Retrieves all exercise logs for a user.
+
+Query Parameters:
+
+username: The username of the user.
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success", "exercises": ["<log1>", "<log2>"] }
