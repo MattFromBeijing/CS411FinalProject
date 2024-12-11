@@ -26,11 +26,7 @@ To use this API, got to the website: https://developer.jamendo.com/v3.0
 ### 1. Personalized Recommendations
 Our Recommendations Model provides personalized exercise and music suggestions by managing user preferences such as target muscle groups, available equipment, and favorite songs. It integrates with external APIs to fetch tailored workout plans and playlists, ensuring a seamless and engaging user experience.
 ### 2. Workout Logging and Progress Tracking
-Our app allows users to record details like:
-*Exercise performed.
-*Muscle groups targeted.
-As well as retrieve historical workout logs for specific dates or targeted muscle groups.
-We also allow users to delete their logs, as well as modify them
+Our app allows users to record details such as exercise performed and muscle groups targeted, As well as retrieve historical workout logs for specific dates or targeted muscle groups. We also allow users to delete their logs, as well as modify them
 ### 3. Equipment and Resources Management
 Manage a list of available equipment to ensure workout recommendations align with user resources.
 Update equipment availability dynamically to reflect changes in the user's environment.
