@@ -29,8 +29,6 @@ Our Recommendations Model provides personalized exercise and music suggestions b
 Our app allows users to record details like:
 *Exercise performed.
 *Muscle groups targeted.
-*Date and duration.
-*Equipment used.
 As well as retrieve historical workout logs for specific dates or targeted muscle groups.
 We also allow users to delete their logs, as well as modify them
 ### 3. Equipment and Resources Management
