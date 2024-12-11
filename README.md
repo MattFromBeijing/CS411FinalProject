@@ -172,158 +172,149 @@ Example Response:
 ## Target Management
 
 ### Set Target Groups
-
-Route: /set-target-groups
-
+Route: /api/set-target-groups
 Request Type: POST
-
-Purpose: Sets target groups for a user.
+Purpose: Sets target groups for a specific user.
 
 Request Body:
 
-{
-  "username": "<username>",
-  "groups": ["<group1>", "<group2>"]
-}
-
+username (String): The username of the user.
+groups (List[String]): A list of groups to set as targets.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
+Content: { "status": "success" }
 
-Content:
-
-{ "status": "success" }
-
-Error Response Example:
-
+Error Response Examples:
 Code: 400
+Content: { "error": "username and groups required" }
 
-Content:
+Code: 404
+Content: { "error": "username not found" }
 
-{ "error": "username and groups required" }
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/set-target-groups" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "groups":["group1", "group2"]}'
+
+Example Response:
+{
+  "status": "success"
+}
 
 ### Add Target Group
-
-Route: /add-target-group
-
+Route: /api/add-target-group
 Request Type: POST
-
-Purpose: Adds a target group for a user.
+Purpose: Adds a single target group for a specific user.
 
 Request Body:
 
-{
-  "username": "<username>",
-  "group": "<group>"
-}
-
+username (String): The username of the user.
+group (String): The group to be added as a target.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
+Content: { "status": "success" }
 
-Content:
+Error Response Examples:
+Code: 400
+Content: { "error": "username and group required" }
 
-{ "status": "success" }
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/add-target-group" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "group":"group1"}'
+
+Example Response:
+
+{
+  "status": "success"
+}
 
 ### Remove Target Group
-
-Route: /remove-target-group
-
+Route: /api/remove-target-group
 Request Type: POST
-
-Purpose: Removes a target group for a user.
+Purpose: Removes a single target group from a specific user's targets.
 
 Request Body:
 
-{
-  "username": "<username>",
-  "group": "<group>"
-}
-
+username (String): The username of the user.
+group (String): The group to be removed.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
+Content: { "status": "success" }
 
-Content:
+Error Response Examples:
+Code: 400
+Content: { "error": "username and group required" }
 
-{ "status": "success" }
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/remove-target-group" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "group":"group1"}'
+Example Response:
+
+{
+  "status": "success"
+}
 
 ### Get Target Groups
-
-Route: /get-target-groups
-
+Route: /api/get-target-groups
 Request Type: GET
-
-Purpose: Retrieves target groups for a user.
+Purpose: Retrieves a list of target groups for a specific user.
 
 Query Parameters:
 
-username: The username of the user.
-
+username (String): The username of the user.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
-
 Content:
 
-{ "status": "success", "groups": ["<group1>", "<group2>"] }
-
-## Equiptment Management
-
-### Set Available Equipment
-
-Route: /set-available-equipment-list
-
-Request Type: POST
-
-Purpose: Sets the available equipment list for a user.
-
-Request Body:
-
-{
-  "username": "<username>",
-  "equipment_list": ["<equipment1>", "<equipment2>"]
+{ 
+  "status": "success", 
+  "groups": ["group1", "group2"] 
 }
 
-Response Format: JSON
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
 
-Success Response Example:
+Code: 404
+Content: { "error": "username not found" }
 
-Code: 200
+Code: 500
+Content: { "error": "An unexpected error occurred." }
 
-Content:
+Example Request:
 
-{ "status": "success" }
+curl -s -X GET "http://localhost:5000/api/get-target-groups?username=testuser"
+Example Response:
 
-### Get Available Equipment
-
-Route: /get-available-equipment
-
-Request Type: GET
-
-Purpose: Retrieves the available equipment list for a user.
-
-Query Parameters:
-
-username: The username of the user.
-
-Response Format: JSON
-
-Success Response Example:
-
-Code: 200
-
-Content:
-
-{ "status": "success", "equipment": ["<equipment1>", "<equipment2>"] }
+{
+  "status": "success",
+  "groups": ["group1", "group2"]
+}
 
 ## Exercise Search
 
