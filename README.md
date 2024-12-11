@@ -1066,3 +1066,5 @@ Example Response:
   "status": "success",
   "song": { "name": "Random Song", "artist": "Random Artist" }
 }
+
+![image](https://github.com/user-attachments/assets/179deb8c-d863-4777-a2bd-b9813e81a935)
