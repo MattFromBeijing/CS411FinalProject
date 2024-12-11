@@ -271,6 +271,7 @@ Example Request:
 
 curl -s -X POST "http://localhost:5000/api/remove-target-group" -H "Content-Type: application/json" \
 -d '{"username":"testuser", "group":"group1"}'
+
 Example Response:
 
 {
@@ -309,6 +310,7 @@ Content: { "error": "An unexpected error occurred." }
 Example Request:
 
 curl -s -X GET "http://localhost:5000/api/get-target-groups?username=testuser"
+
 Example Response:
 
 {
@@ -316,77 +318,594 @@ Example Response:
   "groups": ["group1", "group2"]
 }
 
-## Exercise Search
+## Equiptment Management
 
-### Find Exercises by Target Groups
-
-Route: /find-exercise-by-target-groups
-
-Request Type: GET
-
-Purpose: Finds exercises based on a user's target groups.
-
-Query Parameters:
-
-username: The username of the user.
-
-Response Format: JSON
-
-Success Response Example:
-
-Code: 200
-
-Content:
-
-{ "status": "success", "exercises": ["<exercise1>", "<exercise2>"] }
-
-## Logs Management
-
-### Create Log
-
-Route: /create-log
-
+### Set Available Equipment List
+Route: /api/set-available-equipment-list
 Request Type: POST
-
-Purpose: Creates an exercise log for a user.
+Purpose: Sets the available equipment list for a specific user.
 
 Request Body:
 
-{
-  "username": "<username>",
-  "exercise_name": "<exercise_name>",
-  "muscle_groups": ["<group1>", "<group2>"],
-  "date": "<YYYY-MM-DD>"
-}
-
+username (String): The username of the user.
+equipment_list (List[String]): A list of equipment to be set as available.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
+Content: { "status": "success" }
 
-Content:
+Error Response Examples:
+Code: 400
+Content: { "error": "username and equipment_list required" }
 
-{ "status": "success" }
+Code: 404
+Content: { "error": "username not found" }
 
-### Get All Logs
+Code: 500
+Content: { "error": "An unexpected error occurred." }
 
-Route: /get-all-logs
+Example Request:
 
+curl -s -X POST "http://localhost:5000/api/set-available-equipment-list" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "equipment_list":["item1", "item2"]}'
+
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Add Available Equipment
+Route: /api/add-available-equipment
+Request Type: POST
+Purpose: Adds an item to the available equipment list for a specific user.
+
+Request Body:
+
+username (String): The username of the user.
+equipment (String): The equipment item to be added to the user's list.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and equipment required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/add-available-equipment" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "equipment":"item1"}'
+
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Remove Available Equipment
+Route: /api/remove-available-equipment
+Request Type: POST
+Purpose: Removes an item from the available equipment list for a specific user.
+
+Request Body:
+
+username (String): The username of the user.
+equipment (String): The equipment item to be removed from the user's list.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and equipment required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/remove-available-equipment" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "equipment":"item1"}'
+
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Get Available Equipment
+Route: /api/get-available-equipment
 Request Type: GET
-
-Purpose: Retrieves all exercise logs for a user.
+Purpose: Retrieves the available equipment list for a specific user.
 
 Query Parameters:
 
-username: The username of the user.
-
+username (String): The username of the user.
 Response Format: JSON
 
 Success Response Example:
-
 Code: 200
-
 Content:
 
-{ "status": "success", "exercises": ["<log1>", "<log2>"] }
+{ 
+  "status": "success", 
+  "equipment_list": ["item1", "item2"] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/get-available-equipment?username=testuser"
+
+Example Response:
+
+{
+  "status": "success",
+  "equipment_list": ["item1", "item2"]
+}
+
+## Finding Exercises (External API Calls)
+
+### Find Exercises by Target Groups
+Route: /api/find-exercise-by-target-groups
+Request Type: GET
+Purpose: Retrieves a list of exercises based on a user's target muscle groups.
+
+Query Parameters:
+
+username (String): The username of the user.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": ["exercise1", "exercise2"] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/find-exercise-by-target-groups?username=testuser"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": ["exercise1", "exercise2"]
+}
+
+## Find Exercises by Groups
+Route: /api/find-exercise-by-groups
+Request Type: GET
+Purpose: Retrieves a list of exercises based on specified muscle groups.
+
+Query Parameters:
+
+username (String): The username of the user.
+groups (List[String]): A list of muscle groups to search for exercises.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": ["exercise1", "exercise2"] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and groups required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/find-exercise-by-groups?username=testuser&groups=arms&groups=legs"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": ["exercise1", "exercise2"]
+}
+
+### Find Exercises by Available Equipment
+Route: /api/find-exercise-by-available-equipment
+Request Type: GET
+Purpose: Retrieves a list of exercises based on the user's available equipment.
+
+Query Parameters:
+
+username (String): The username of the user.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": ["exercise1", "exercise2"] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/find-exercise-by-available-equipment?username=testuser"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": ["exercise1", "exercise2"]
+}
+
+## Find Exercises by Specified Equipment
+Route: /api/find-exercise-by-equipment
+Request Type: GET
+Purpose: Retrieves a list of exercises based on specified equipment.
+
+Query Parameters:
+
+username (String): The username of the user.
+equipment (List[String]): A list of equipment items to search for exercises.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": ["exercise1", "exercise2"] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and equipment required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/find-exercise-by-equipment?username=testuser&equipment=dumbbells&equipment=bench"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": ["exercise1", "exercise2"]
+}
+
+
+## Logs Management
+### Create Log
+Route: /api/create-log
+Request Type: POST
+Purpose: Creates an exercise log for a specific user.
+
+Request Body:
+
+username (String): The username of the user.
+exercise_name (String): The name of the exercise.
+muscle_groups (List[String]): A list of muscle groups targeted by the exercise.
+date (String): The date of the exercise log (in a valid date format).
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username, exercise_name, muscle_groups, and date required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/create-log" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "exercise_name":"squat", "muscle_groups":["legs"], "date":"2024-12-10"}'
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Clear Logs
+Route: /api/clear-logs
+Request Type: POST
+Purpose: Clears all exercise logs for a specific user.
+
+Request Body:
+
+username (String): The username of the user.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/clear-logs" -H "Content-Type: application/json" \
+-d '{"username":"testuser"}'
+
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Delete Log by Date
+Route: /api/delete-log-by-date
+Request Type: POST
+Purpose: Deletes an exercise log for a specific user based on the date.
+
+Request Body:
+
+username (String): The username of the user.
+date (String): The date of the log to delete (in a valid date format).
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and date required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/delete-log-by-date" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "date":"2024-12-10"}'
+Example Response:
+
+{
+  "status": "success"
+}
+
+### Get All Logs
+Route: /api/get-all-logs
+Request Type: GET
+Purpose: Retrieves all exercise logs for a specific user.
+
+Query Parameters:
+
+username (String): The username of the user.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ] 
+}
+Error Response Examples:
+Code: 400
+Content: { "error": "username required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/get-all-logs?username=testuser"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ]
+}
+
+### Get Log by Date
+Route: /api/get-log-by-date
+Request Type: GET
+Purpose: Retrieves exercise logs for a specific date for a user.
+
+Query Parameters:
+
+username (String): The username of the user.
+date (String): The date of the logs to retrieve (in a valid date format).
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ] 
+}
+Error Response Examples:
+Code: 400
+Content: { "error": "username and date required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/get-log-by-date?username=testuser&date=2024-12-10"
+
+Example Response:
+
+{
+  "status": "success",
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ]
+}
+
+### Get Logs by Muscle Group
+Route: /api/get-log-by-muscle-group
+Request Type: GET
+Purpose: Retrieves exercise logs for a specific muscle group for a user.
+
+Query Parameters:
+
+username (String): The username of the user.
+muscle_group (String): The muscle group for which to retrieve logs.
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content:
+
+{ 
+  "status": "success", 
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ] 
+}
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username and muscle_group required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X GET "http://localhost:5000/api/get-log-by-muscle-group?username=testuser&muscle_group=legs"
+Example Response:
+
+{
+  "status": "success",
+  "exercises": [
+    { "exercise_name": "squat", "muscle_groups": ["legs"], "date": "2024-12-10" }
+  ]
+}
+
+### Update Log
+Route: /api/update-log
+Request Type: POST
+Purpose: Updates an exercise log for a specific user.
+
+Request Body:
+
+username (String): The username of the user.
+exercise_name (String): The name of the exercise to update.
+muscle_groups (List[String]): A list of muscle groups targeted by the exercise.
+date (String): The date of the log to update (in a valid date format).
+Response Format: JSON
+
+Success Response Example:
+Code: 200
+Content: { "status": "success" }
+
+Error Response Examples:
+Code: 400
+Content: { "error": "username, exercise_name, muscle_groups, and date required" }
+
+Code: 404
+Content: { "error": "username not found" }
+
+Code: 500
+Content: { "error": "An unexpected error occurred." }
+
+Example Request:
+
+curl -s -X POST "http://localhost:5000/api/update-log" -H "Content-Type: application/json" \
+-d '{"username":"testuser", "exercise_name":"squat", "muscle_groups":["legs"], "date":"2024-12-10"}'
+
+Example Response:
+
+{
+  "status": "success"
+}
