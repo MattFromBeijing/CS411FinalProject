@@ -28,17 +28,23 @@ class RecommendationsModel:
     A class to manage recommending exercises to the user
 
     Attributes:
+        wger_base_url (str): base url for wger api calls
+        wger_api_key (str): api key for wger api calls
+        jamendo_base_url (str): base url for jamendo api calls
+        jamendo_api_key (str): api key for jamendo api calls
+        
+        username (str): username of the user
         target_groups (List[str]): muscle groups the user wants to focus on
-        exercises (List[Exercise]): a corresponding exercise for each muscle group
-        base_url (str): base url for api calls
-        api_key (str): api key for api calls
+        equipment (List[str]): equipment the user has access to
     """
 
     def __init__(self, username):
-        self.base_url: str = "https://wger.de/api/v2/exercisebaseinfo/"
+        self.wger_base_url: str = "https://wger.de/api/v2/exercisebaseinfo/"
         self.wger_api_key: str = os.getenv("wger_API_KEY")
+        self.jamendo_base_url: str = "https://api.jamendo.com/v3.0/tracks/"
         self.jamendo_api_key: str = os.getenv("jamendo_API_KEY")
-        self.user_id: int = username
+        
+        self.username: str = username
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
         self.target_song: List[str] = []
@@ -303,7 +309,7 @@ class RecommendationsModel:
 
         try:
             #response = requests.get(f"{BASE_URL}exercise/", params=params)
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
+            response = requests.get(self.wger_base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", []) # getting data
 
@@ -374,7 +380,7 @@ class RecommendationsModel:
         }
 
         try:
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
+            response = requests.get(self.wger_base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", []) # getting data
 
@@ -417,7 +423,7 @@ class RecommendationsModel:
 
         try:
             # Fetch exercises targeting the specified muscle group
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
+            response = requests.get(self.wger_base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", [])
 
@@ -497,7 +503,7 @@ class RecommendationsModel:
             duration_min = 500
     
         try:
-            response = requests.get("https://api.jamendo.com/v3.0/tracks/", params=params)
+            response = requests.get(self.jamendo_base_url, params=params)
             response.raise_for_status()
             data = response.json()
         
@@ -518,8 +524,6 @@ class RecommendationsModel:
         except requests.exceptions.RequestException as e:
             return [f"An error occurred: {e}"]
 
-
-    
     def fetch_random_song(self):
         """
         Fetch a random song from the Jamendo API.
@@ -532,7 +536,7 @@ class RecommendationsModel:
         }
 
         try:
-            response = requests.get("https://api.jamendo.com/v3.0/tracks/", params=params)
+            response = requests.get(self.jamendo_base_url, params=params)
             response.raise_for_status()
             data = response.json()
         

@@ -730,114 +730,10 @@ def api_update_log():
 
 ##########################################################
 #
-# Playlist Management
-#
-##########################################################
-
-@app.route('/api/set-playlist', methods=['POST'])
-def api_set_playlist():
-    """
-    Route to set a playlist for a user.
-
-    Expected JSON Input:
-        - username (str): The username of the user.
-        - playlist (list): A list of songs to be set as the user's playlist.
-
-    Returns:
-        JSON response indicating the success or failure of the operation.
-    """
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        playlist = data.get('playlist')
-        
-        if not username or not playlist: return jsonify({"error": "username and playlist required"}), 400
-        if username not in accounts: return jsonify({"error": "username not found"}), 404
-        
-        model = accounts[username]
-        result = model.set_playlist(playlist)
-        
-        if result:
-            return jsonify({"status": "success"}), 200
-        else:
-            return jsonify({"status": "error"}), 500
-        
-    except Exception as e:
-        app.logger.info(e)
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/add-song-to-playlist', methods=['POST'])
-def api_add_song_to_playlist():
-    """
-    Route to add a song to a user's playlist.
-
-    Expected JSON Input:
-        - username (str): The username of the user.
-        - song (str): The song name to be added to the playlist.
-
-    Returns:
-        JSON response indicating the success or failure of the operation.
-    """
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        song = data.get('song')
-        
-        if not username or not song: return jsonify({"error": "username and song required"}), 400
-        if username not in accounts: return jsonify({"error": "username not found"}), 404
-        
-        model = accounts[username]
-        result = model.add_song_to_playlist(song)
-        
-        if result:
-            return jsonify({"status": "success"}), 200
-        else:
-            return jsonify({"status": "error"}), 500
-        
-    except Exception as e:
-        app.logger.info(e)
-        return jsonify({"error": str(e)}), 500
-    
-@app.route('/api/remove-song-from-playlist', methods=['POST'])
-def api_remove_song_from_playlist():
-    """
-    Route to remove a song from a user's playlist.
-
-    Expected JSON Input:
-        - username (str): The username of the user.
-        - song (str): The song name to be removed from the playlist.
-
-    Returns:
-        JSON response indicating the success or failure of the operation.
-    """
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        song = data.get('song')
-        
-        if not username or not song: return jsonify({"error": "username and song required"}), 400
-        if username not in accounts: return jsonify({"error": "username not found"}), 404
-        
-        model = accounts[username]
-        result = model.remove_song_from_playlist(song)
-        
-        if result:
-            return jsonify({"status": "success"}), 200
-        else:
-            return jsonify({"status": "error"}), 500
-        
-    except Exception as e:
-        app.logger.info(e)
-        return jsonify({"error": str(e)}), 500
-
-##########################################################
-#
 # Song Management
 #
 ##########################################################
 
-BASE_URL = "https://api.jamendo.com/v3.0/tracks/"
-API_KEY = os.getenv("jamendo_API_KEY")
 @app.route('/api/fetch-songs-by-workouts', methods=['GET'])
 def fetch_songs_by_workouts():
     """
@@ -850,14 +746,21 @@ def fetch_songs_by_workouts():
         JSON response with a list of song names and their artists.
     """
     try:
-        workout_count = int(request.args.get('workout_count', 1))  # Default to 1 if not provided
+        username = request.args.get('username')
+        count = request.args.get('workout_count', 1)
         
-        songs = fetch_songs_based_on_workouts(workout_count)
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        
+        workout_count = int(count)
+        songs = model.fetch_songs_based_on_workouts(workout_count)
         
         if songs:
             return jsonify({"status": "success", "songs": songs}), 200
         else:
-            return jsonify({"status": "no songs found"}), 404
+            return jsonify({"status": "error", "songs": "no songs found"}), 404
         
     except Exception as e:
         logger.error(f"Error fetching songs by workouts: {e}")
@@ -872,82 +775,20 @@ def fetch_random_song_route():
         JSON response with a random song name and artist.
     """
     try:
-        song = fetch_random_song()
+        username = request.args.get('username')
+        
+        if not username: return jsonify({"error": "username required"}), 400
+        if username not in accounts: return jsonify({"error": "username not found"}), 404
+        
+        model = accounts[username]
+        
+        song = model.fetch_random_song()
         
         return jsonify({"status": "success", "song": song}), 200
         
     except Exception as e:
         logger.error(f"Error fetching random song: {e}")
         return jsonify({"error": str(e)}), 500
-
-@app.route('/api/fetch-by-workouts', methods=['GET'])
-def fetch_songs_based_on_workouts(workout_count):
-    """
-    Fetch songs from the Jamendo API based on the number of workouts.
-
-    Args:
-        workout_count : integer number of workouts completed by the user. It helps in determining the intensity.
-
-    Returns:
-        songs : list of song names and their artists based on workout count.
-    """
-    params = {
-        "client_id": API_KEY,
-    }
-
-    duration_min = workout_count * 100
-    if duration_min > 500:
-        duration_min = 500
-        
-    try:
-        response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
-        
-        if "results" in data:
-            songs = []
-            for song in data["results"]:
-                if song.get("duration", 0) >= duration_min:
-                    song_name = song.get("name", "Unknown")
-                    artist_name = song.get("artist_name", "Unknown")
-                    songs.append(f"{song_name} by {artist_name}")
-            
-            return songs
-        else:
-            return []
-    
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching songs based on workouts: {e}")
-        return [f"An error occurred: {e}"]
-
-def fetch_random_song():
-    """
-    Fetch a random song from the Jamendo API.
-
-    Returns:
-        str: A random song name and its artist.
-    """
-    params = {
-        "client_id": API_KEY,
-    }
-
-    try:
-        response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
-        
-        if "results" in data and len(data["results"]) > 0:
-            song = random.choice(data["results"])
-            song_name = song.get("name", "Unknown")
-            artist_name = song.get("artist_name", "Unknown")
-            return f"{song_name} by {artist_name}"
-        else:
-            return "No songs found."
-    
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching random song: {e}")
-        return f"An error occurred: {e}"
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

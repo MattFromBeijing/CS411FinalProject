@@ -434,6 +434,63 @@ update_log() {
 
 ###############################################
 #
+# Song Management
+#
+###############################################
+
+fetch_songs_by_workouts() {
+  username=$1
+  workout_count=$2
+  echo "Fetching songs for user: $username with workout count: $workout_count..."
+  response=$(curl -s -X GET "$BASE_URL/fetch-songs-by-workouts?username=$username&workout_count=$workout_count")
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Songs fetched successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Response JSON:"
+      echo "$response" | jq .
+    fi
+  elif echo "$response" | grep -q '"status": "error"'; then
+    echo "No songs found for the given workout count."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Response JSON:"
+      echo "$response" | jq .
+    fi
+  elif echo "$response" | grep -q '"error":'; then
+    echo "Error occurred during fetching songs."
+    echo "$response" | jq .
+    exit 1
+  else
+    echo "Unexpected response:"
+    echo "$response"
+    exit 1
+  fi
+}
+
+fetch_random_song() {
+  username=$1
+  echo "Fetching a random song for user: $username..."
+  
+  response=$(curl -s -X GET "$BASE_URL/fetch-random-song?username=$username")
+  
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Random song fetched successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Response JSON:"
+      echo "$response" | jq .
+    fi
+  elif echo "$response" | grep -q '"error":'; then
+    echo "Error occurred during fetching a random song."
+    echo "$response" | jq .
+    exit 1
+  else
+    echo "Unexpected response:"
+    echo "$response"
+    exit 1
+  fi
+}
+
+###############################################
+#
 # Run smoketests
 #
 ###############################################
@@ -478,5 +535,10 @@ clear_logs "testuser1"
 
 get_all_logs "testuser2"
 delete_log_by_date "testuser2" "2024-12-10"
+
+fetch_random_song "testuser2"
+fetch_songs_by_workouts "testuser2" 10
+
+clear_all_users
 
 echo "All smoketests passed successfully!"
