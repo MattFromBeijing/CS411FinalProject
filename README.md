@@ -36,7 +36,7 @@ Clear Users: Admin functionality to reset all user data.
 
 
 ## Routes:
-1. Health Check
+### Health Check
 Route: /api/health
 Request Type: GET
 Purpose: Verifies that the service is running and healthy.
@@ -44,7 +44,7 @@ Purpose: Verifies that the service is running and healthy.
 Request Body:
 No parameters required.
 
-Response Format:
+Response Format: JSON
 
 Success Response Example:
 Code: 200
@@ -59,7 +59,7 @@ Example Response:
 }
 
 
-2. Create Account
+### Create Account
 Route: /api/create-account
 Request Type: POST
 Purpose: Creates a new user account with a username and password.
@@ -69,7 +69,7 @@ Request Body:
 username (String): User's chosen username.
 password (String): User's chosen password.
 
-Response Format:
+Response Format: JSON
 
 Success Response Example:
 Code: 201
@@ -88,7 +88,7 @@ Example Response:
   "username": "newuser123"
 }
 
-3. Login
+### Login
 Route: /api/login
 Request Type: POST
 Purpose: Verifies the username and password for a user login.
@@ -98,7 +98,7 @@ Request Body:
 username (String): User's username.
 password (String): User's password.
 
-Response Format:
+Response Format: JSON
 
 Success Response Example:
 Code: 200
@@ -117,7 +117,7 @@ Example Response:
   "user_id": 1
 }
 
-4. Update Password
+### Update Password
 Route: /api/update-password
 Request Type: POST
 Purpose: Updates the password for an existing user.
@@ -126,7 +126,8 @@ Request Body:
 
 username (String): The username of the user.
 new_password (String): The new password for the user.
-Response Format:
+
+Response Format: JSON
 
 Success Response Example:
 Code: 200
@@ -144,14 +145,14 @@ Example Response:
   "message": "Password updated successfully."
 }
 
-5. Clear All Users
+### Clear All Users
 Route: /api/clear-users
 Request Type: POST
 Purpose: Clears all users from the database.
 
 Request Body: No parameters required.
 
-Response Format:
+Response Format: JSON
 
 Success Response Example:
 Code: 200
@@ -167,3 +168,110 @@ Example Response:
 {
   "message": "All users cleared successfully."
 }
+
+## Target Management
+
+### Set Target Groups
+
+Route: /set-target-groups
+
+Request Type: POST
+
+Purpose: Sets target groups for a user.
+
+Request Body:
+
+{
+  "username": "<username>",
+  "groups": ["<group1>", "<group2>"]
+}
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success" }
+
+Error Response Example:
+
+Code: 400
+
+Content:
+
+{ "error": "username and groups required" }
+
+### Add Target Group
+
+Route: /add-target-group
+
+Request Type: POST
+
+Purpose: Adds a target group for a user.
+
+Request Body:
+
+{
+  "username": "<username>",
+  "group": "<group>"
+}
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success" }
+
+### Remove Target Group
+
+Route: /remove-target-group
+
+Request Type: POST
+
+Purpose: Removes a target group for a user.
+
+Request Body:
+
+{
+  "username": "<username>",
+  "group": "<group>"
+}
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success" }
+
+### Get Target Groups
+
+Route: /get-target-groups
+
+Request Type: GET
+
+Purpose: Retrieves target groups for a user.
+
+Query Parameters:
+
+username: The username of the user.
+
+Response Format: JSON
+
+Success Response Example:
+
+Code: 200
+
+Content:
+
+{ "status": "success", "groups": ["<group1>", "<group2>"] }
