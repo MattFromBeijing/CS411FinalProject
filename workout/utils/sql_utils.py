@@ -47,6 +47,7 @@ def get_db_connection():
     conn = None
     try:
         conn = sqlite3.connect(DB_PATH)
+        logger.info("Database connection opened.")
         yield conn
     except sqlite3.Error as e:
         logger.error("Database connection error: %s", str(e))
