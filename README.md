@@ -3,7 +3,7 @@
 ## Overview
 The Workout and Music Application is tool to support individuals in achieving their fitness goals through tailored exercise recommendations, goal tracking, and comprehensive logging capabilities. It features seamless music integration, ensuring each workout is enriched with a fitting backtrack
 
-## Steps to run the application
+## Steps to Run the Application
 1. Download all the files
 2. Create the virtual environment in Linux Terminal using: source setup_venv.sh
 3. Use the command sh run_docker.sh
