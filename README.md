@@ -910,97 +910,79 @@ Example Response:
   "status": "success"
 }
 
-## Playlist Management
-### Set Playlist
-Route: /api/set-playlist
-Request Type: POST
-Purpose: Sets a playlist for a specific user.
+## Song Management
+### Fetch Songs by Workouts
+Route: /api/fetch-songs-by-workouts
+Request Type: GET
+Purpose: Fetches a list of songs based on the number of workouts completed by the user.
 
-Request Body:
+Query Parameters:
 
 username (String): The username of the user.
-playlist (List[String]): A list of songs to be set as the user's playlist.
+workout_count (Integer, optional): The number of workouts completed by the user. Defaults to 1 if not provided.
 Response Format: JSON
 
 Success Response Example:
 Code: 200
-Content: { "status": "success" }
-
-Error Response Examples:
-Code: 400
-Content: { "error": "username and playlist required" }
-
-Code: 404
-Content: { "error": "username not found" }
-
-Code: 500
-Content: { "error": "An unexpected error occurred." }
-
-Example Request:
-
-curl -s -X POST "http://localhost:5000/api/set-playlist" -H "Content-Type: application/json" \
--d '{"username":"testuser", "playlist":["song1", "song2", "song3"]}'
-
-Example Response:
+Content:
 
 {
-  "status": "success"
+  "status": "success",
+  "songs": [
+    { "name": "Song 1", "artist": "Artist 1" },
+    { "name": "Song 2", "artist": "Artist 2" }
+  ]
 }
 
-### Add Song to Playlist
-Route: /api/add-song-to-playlist
-Request Type: POST
-Purpose: Adds a song to a user's playlist.
-
-Request Body:
-
-username (String): The username of the user.
-song (String): The song name to be added to the playlist.
-Response Format: JSON
-
-Success Response Example:
-Code: 200
-Content: { "status": "success" }
-
 Error Response Examples:
 Code: 400
-Content: { "error": "username and song required" }
+Content: { "error": "username required" }
 
 Code: 404
 Content: { "error": "username not found" }
+
+Code: 404
+Content: { "status": "error", "songs": "no songs found" }
 
 Code: 500
 Content: { "error": "An unexpected error occurred." }
 
 Example Request:
 
-curl -s -X POST "http://localhost:5000/api/add-song-to-playlist" -H "Content-Type: application/json" \
--d '{"username":"testuser", "song":"song4"}'
+curl -s -X GET "http://localhost:5000/api/fetch-songs-by-workouts?username=testuser&workout_count=5"
 
 Example Response:
 
 {
-  "status": "success"
+  "status": "success",
+  "songs": [
+    { "name": "Song 1", "artist": "Artist 1" },
+    { "name": "Song 2", "artist": "Artist 2" }
+  ]
 }
 
-### Remove Song from Playlist
-Route: /api/remove-song-from-playlist
-Request Type: POST
-Purpose: Removes a song from a user's playlist.
+### Fetch Random Song
+Route: /api/fetch-random-song
+Request Type: GET
+Purpose: Fetches a random song using the Jamendo API.
 
-Request Body:
+Query Parameters:
 
 username (String): The username of the user.
-song (String): The song name to be removed from the playlist.
 Response Format: JSON
 
 Success Response Example:
 Code: 200
-Content: { "status": "success" }
+Content:
+
+{
+  "status": "success",
+  "song": { "name": "Random Song", "artist": "Random Artist" }
+}
 
 Error Response Examples:
 Code: 400
-Content: { "error": "username and song required" }
+Content: { "error": "username required" }
 
 Code: 404
 Content: { "error": "username not found" }
@@ -1010,11 +992,11 @@ Content: { "error": "An unexpected error occurred." }
 
 Example Request:
 
-curl -s -X POST "http://localhost:5000/api/remove-song-from-playlist" -H "Content-Type: application/json" \
--d '{"username":"testuser", "song":"song2"}'
+curl -s -X GET "http://localhost:5000/api/fetch-random-song?username=testuser"
 
 Example Response:
 
 {
-  "status": "success"
+  "status": "success",
+  "song": { "name": "Random Song", "artist": "Random Artist" }
 }
