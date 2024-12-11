@@ -835,8 +835,9 @@ def api_remove_song_from_playlist():
 # Song Management
 #
 ##########################################################
+
 BASE_URL = "https://api.jamendo.com/v3.0/tracks/"
-API_KEY = "141e0653" 
+API_KEY = os.getenv("jamendo_API_KEY")
 @app.route('/api/fetch-songs-by-workouts', methods=['GET'])
 def fetch_songs_by_workouts():
     """
@@ -879,6 +880,7 @@ def fetch_random_song_route():
         logger.error(f"Error fetching random song: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/fetch-by-workouts', methods=['GET'])
 def fetch_songs_based_on_workouts(workout_count):
     """
     Fetch songs from the Jamendo API based on the number of workouts.

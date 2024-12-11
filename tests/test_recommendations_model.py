@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 import pytest
 import requests
-from pytest_mock import mocker
 from unittest.mock import MagicMock
 from datetime import datetime
 from datetime import date

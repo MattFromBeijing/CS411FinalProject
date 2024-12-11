@@ -2,6 +2,7 @@ import requests
 import logging
 import random
 from typing import List
+import os
 
 from dataclasses import dataclass
 from datetime import date
@@ -35,7 +36,8 @@ class RecommendationsModel:
 
     def __init__(self, username):
         self.base_url: str = "https://wger.de/api/v2/exercisebaseinfo/"
-        self.api_key: str = "5bf4f0a02bedae58dbbbbf318be604eb4d0f88c5"
+        self.wger_api_key: str = os.getenv("wger_API_KEY")
+        self.jamendo_api_key: str = os.getenv("jamendo_API_KEY")
         self.user_id: int = username
         self.target_groups: List[str] = []
         self.equipment: List[str] = []
@@ -296,12 +298,12 @@ class RecommendationsModel:
         """
         params = {
             "language": 2,  # default Language: English
-            "api_key": self.api_key
+            "api_key": self.wger_api_key
         }
 
         try:
             #response = requests.get(f"{BASE_URL}exercise/", params=params)
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
+            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", []) # getting data
 
@@ -368,11 +370,11 @@ class RecommendationsModel:
         """
         params = {
             "language": 2,  # default Language: English
-            "api_key": self.api_key
+            "api_key": self.wger_api_key
         }
 
         try:
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
+            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", []) # getting data
 
@@ -410,12 +412,12 @@ class RecommendationsModel:
         """
         params = {
             "language": 2,  # Language set to English
-            "api_key": self.api_key
+            "api_key": self.wger_api_key
         }
 
         try:
             # Fetch exercises targeting the specified muscle group
-            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.api_key}"})
+            response = requests.get(self.base_url, params=params, headers={"Authorization": f"Token {self.wger_api_key}"})
             response.raise_for_status()
             data = response.json().get("results", [])
 
@@ -487,7 +489,7 @@ class RecommendationsModel:
             songs : list of song names and their artists based on workout count.
         """
         params = {
-            "client_id": "141e0653",
+            "client_id": self.jamendo_api_key,
         }
 
         duration_min = workout_count * 100
@@ -526,7 +528,7 @@ class RecommendationsModel:
             str: A random song name and its artist.
         """
         params = {
-            "client_id": "141e0653",
+            "client_id": self.jamendo_api_key,
         }
 
         try:
