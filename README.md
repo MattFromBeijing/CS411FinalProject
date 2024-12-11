@@ -5,9 +5,10 @@ The Workout and Music Application is tool to support individuals in achieving th
 
 ## APIs Used
 Wger Exercise API: https://wger.de/api/v2/exercisebaseinfo/
+
 Jamendo Music API: https://api.jamendo.com/v3.0/tracks/
 
-Features
+## Features
 ### 1. Personalized Recommendations
 Our Recommendations Model provides personalized exercise and music suggestions by managing user preferences such as target muscle groups, available equipment, and favorite songs. It integrates with external APIs to fetch tailored workout plans and playlists, ensuring a seamless and engaging user experience.
 ### 2. Workout Logging and Progress Tracking
