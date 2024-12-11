@@ -35,7 +35,7 @@ Update Password: Allows users to change their password for account security.
 Clear Users: Admin functionality to reset all user data.
 
 
-##Routes:
+## Routes:
 1. Health Check
 Route: /api/health
 Request Type: GET
