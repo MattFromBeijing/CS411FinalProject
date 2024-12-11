@@ -1,4 +1,38 @@
-# CS411FinalProject
+# Workout and Music Application
+
+## Overview
+The Workout and Music Application is tool to support individuals in achieving their fitness goals through tailored exercise recommendations, goal tracking, and comprehensive logging capabilities. It features seamless music integration, ensuring each workout is enriched with a fitting backtrack
+
+## APIs Used
+Wger Exercise API: https://wger.de/api/v2/exercisebaseinfo/
+Jamendo Music API: https://api.jamendo.com/v3.0/tracks/
+
+Features
+### 1. Personalized Recommendations
+Our Recommendations Model provides personalized exercise and music suggestions by managing user preferences such as target muscle groups, available equipment, and favorite songs. It integrates with external APIs to fetch tailored workout plans and playlists, ensuring a seamless and engaging user experience.
+### 2. Workout Logging and Progress Tracking
+Our app allows users to record details like:
+*Exercise performed.
+*Muscle groups targeted.
+*Date and duration.
+*Equipment used.
+As well as retrieve historical workout logs for specific dates or targeted muscle groups.
+We also allow users to delete their logs, as well as modify them
+### 3. Equipment and Resources Management
+Manage a list of available equipment to ensure workout recommendations align with user resources.
+Update equipment availability dynamically to reflect changes in the user's environment.
+### 4. Target Group Management
+Users can set and update target muscle groups.
+Retrieve exercises specifically curated for these target groups.
+### 5. Music Integration
+Access the Jamendo Music API to create playlists that enhance the workout experience.
+Users can search for tracks based on mood, energy, or exercise type.
+### 6. User Account Management
+Create Account: Users can create personalized accounts.
+Login: Secure authentication ensures user data privacy.
+Update Password: Allows users to change their password for account security.
+Clear Users: Admin functionality to reset all user data.
+
 
 Routes:
 1. Health Check
