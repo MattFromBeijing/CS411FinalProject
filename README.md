@@ -11,8 +11,14 @@ The Workout and Music Application is tool to support individuals in achieving th
   
 ## APIs Used
 Wger Exercise API: https://wger.de/api/v2/exercisebaseinfo/
+To use this API, go to the website https://wger.de/en/software/api
+1. Create an account
+2. Generate a key
 
 Jamendo Music API: https://api.jamendo.com/v3.0/tracks/
+To use this API, got to the website: https://developer.jamendo.com/v3.0
+1. Create an account
+2. Generate a key
 
 ## Features
 ### 1. Personalized Recommendations
