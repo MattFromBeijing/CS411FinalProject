@@ -44,7 +44,9 @@ Clear Users: Admin functionality to reset all user data.
 ## Routes:
 ### Health Check
 Route: /api/health
+
 Request Type: GET
+
 Purpose: Verifies that the service is running and healthy.
 
 Request Body:
@@ -67,7 +69,9 @@ Example Response:
 
 ### Create Account
 Route: /api/create-account
+
 Request Type: POST
+
 Purpose: Creates a new user account with a username and password.
 
 Request Body:
@@ -96,7 +100,9 @@ Example Response:
 
 ### Login
 Route: /api/login
+
 Request Type: POST
+
 Purpose: Verifies the username and password for a user login.
 
 Request Body:
@@ -125,7 +131,9 @@ Example Response:
 
 ### Update Password
 Route: /api/update-password
+
 Request Type: POST
+
 Purpose: Updates the password for an existing user.
 
 Request Body:
@@ -153,7 +161,9 @@ Example Response:
 
 ### Clear All Users
 Route: /api/clear-users
+
 Request Type: POST
+
 Purpose: Clears all users from the database.
 
 Request Body: No parameters required.
@@ -179,7 +189,9 @@ Example Response:
 
 ### Set Target Groups
 Route: /api/set-target-groups
+
 Request Type: POST
+
 Purpose: Sets target groups for a specific user.
 
 Request Body:
@@ -214,7 +226,9 @@ Example Response:
 
 ### Add Target Group
 Route: /api/add-target-group
+
 Request Type: POST
+
 Purpose: Adds a single target group for a specific user.
 
 Request Body:
@@ -250,7 +264,9 @@ Example Response:
 
 ### Remove Target Group
 Route: /api/remove-target-group
+
 Request Type: POST
+
 Purpose: Removes a single target group from a specific user's targets.
 
 Request Body:
@@ -286,7 +302,9 @@ Example Response:
 
 ### Get Target Groups
 Route: /api/get-target-groups
+
 Request Type: GET
+
 Purpose: Retrieves a list of target groups for a specific user.
 
 Query Parameters:
@@ -328,7 +346,9 @@ Example Response:
 
 ### Set Available Equipment List
 Route: /api/set-available-equipment-list
+
 Request Type: POST
+
 Purpose: Sets the available equipment list for a specific user.
 
 Request Body:
@@ -364,7 +384,9 @@ Example Response:
 
 ### Add Available Equipment
 Route: /api/add-available-equipment
+
 Request Type: POST
+
 Purpose: Adds an item to the available equipment list for a specific user.
 
 Request Body:
@@ -400,7 +422,9 @@ Example Response:
 
 ### Remove Available Equipment
 Route: /api/remove-available-equipment
+
 Request Type: POST
+
 Purpose: Removes an item from the available equipment list for a specific user.
 
 Request Body:
@@ -436,7 +460,9 @@ Example Response:
 
 ### Get Available Equipment
 Route: /api/get-available-equipment
+
 Request Type: GET
+
 Purpose: Retrieves the available equipment list for a specific user.
 
 Query Parameters:
@@ -478,7 +504,9 @@ Example Response:
 
 ### Find Exercises by Target Groups
 Route: /api/find-exercise-by-target-groups
+
 Request Type: GET
+
 Purpose: Retrieves a list of exercises based on a user's target muscle groups.
 
 Query Parameters:
@@ -518,7 +546,9 @@ Example Response:
 
 ## Find Exercises by Groups
 Route: /api/find-exercise-by-groups
+
 Request Type: GET
+
 Purpose: Retrieves a list of exercises based on specified muscle groups.
 
 Query Parameters:
@@ -559,7 +589,9 @@ Example Response:
 
 ### Find Exercises by Available Equipment
 Route: /api/find-exercise-by-available-equipment
+
 Request Type: GET
+
 Purpose: Retrieves a list of exercises based on the user's available equipment.
 
 Query Parameters:
@@ -599,7 +631,9 @@ Example Response:
 
 ## Find Exercises by Specified Equipment
 Route: /api/find-exercise-by-equipment
+
 Request Type: GET
+
 Purpose: Retrieves a list of exercises based on specified equipment.
 
 Query Parameters:
@@ -642,7 +676,9 @@ Example Response:
 ## Logs Management
 ### Create Log
 Route: /api/create-log
+
 Request Type: POST
+
 Purpose: Creates an exercise log for a specific user.
 
 Request Body:
@@ -679,7 +715,9 @@ Example Response:
 
 ### Clear Logs
 Route: /api/clear-logs
+
 Request Type: POST
+
 Purpose: Clears all exercise logs for a specific user.
 
 Request Body:
@@ -714,7 +752,9 @@ Example Response:
 
 ### Delete Log by Date
 Route: /api/delete-log-by-date
+
 Request Type: POST
+
 Purpose: Deletes an exercise log for a specific user based on the date.
 
 Request Body:
@@ -749,7 +789,9 @@ Example Response:
 
 ### Get All Logs
 Route: /api/get-all-logs
+
 Request Type: GET
+
 Purpose: Retrieves all exercise logs for a specific user.
 
 Query Parameters:
@@ -792,7 +834,9 @@ Example Response:
 
 ### Get Log by Date
 Route: /api/get-log-by-date
+
 Request Type: GET
+
 Purpose: Retrieves exercise logs for a specific date for a user.
 
 Query Parameters:
@@ -836,7 +880,9 @@ Example Response:
 
 ### Get Logs by Muscle Group
 Route: /api/get-log-by-muscle-group
+
 Request Type: GET
+
 Purpose: Retrieves exercise logs for a specific muscle group for a user.
 
 Query Parameters:
@@ -880,7 +926,9 @@ Example Response:
 
 ### Update Log
 Route: /api/update-log
+
 Request Type: POST
+
 Purpose: Updates an exercise log for a specific user.
 
 Request Body:
@@ -919,7 +967,9 @@ Example Response:
 ## Song Management
 ### Fetch Songs by Workouts
 Route: /api/fetch-songs-by-workouts
+
 Request Type: GET
+
 Purpose: Fetches a list of songs based on the number of workouts completed by the user.
 
 Query Parameters:
@@ -969,7 +1019,9 @@ Example Response:
 
 ### Fetch Random Song
 Route: /api/fetch-random-song
+
 Request Type: GET
+
 Purpose: Fetches a random song using the Jamendo API.
 
 Query Parameters:
